@@ -80,6 +80,8 @@ main{max-width:640px;margin:0 auto}
 
 /* search */
 .search{margin:0 0 10px}
+.found{display:flex;justify-content:space-between;gap:10px;background:var(--card);border-radius:14px;padding:10px 14px;margin:0 0 4px;font-size:15px}
+.found span{color:var(--muted)}
 
 /* tx list */
 .dhead{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:16px 4px 6px}
@@ -645,7 +647,8 @@ function vHome() {
       <div class="big num ${big < 0 ? 'neg' : ''}">${money(big)}</div>
       <div class="flows num"><span class="inc">↙ ${money(inc)}</span><span class="exp">↗ ${money(exp)}</span></div></div>
     ${periodBar('home')}
-    <div id="homeList">${list.length ? txList(list, homeAcc, homeLimit) : '<div class="empty"><p>Операций нет</p></div>'}</div>`;
+    <div id="homeList">${q ? `<div class="found"><span>${list.length} ${plural(list.length, 'запись', 'записи', 'записей')}</span><b class="num ${inc - exp > 0 ? 'inc' : ''}">${signed(inc - exp)}</b></div>` : ''}
+    ${list.length ? txList(list, homeAcc, homeLimit) : '<div class="empty"><p>Операций нет</p></div>'}</div>`;
   return h;
 }
 
