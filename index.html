@@ -168,7 +168,7 @@ main{max-width:640px;margin:0 auto}
 .menu{background:var(--card);border-radius:18px;overflow:hidden;margin:0 0 14px}
 .menu>button,.menu>label.mi{display:flex;width:100%;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);margin:0;color:var(--text);font-size:15px}
 .menu>*:last-child{border-bottom:0}
-.menu .mi span{flex:1}.menu .go{color:var(--muted)}
+.menu .mi span{flex:1}.menu .go{color:var(--muted);margin-left:auto}
 
 /* tabs + fab */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);background:color-mix(in srgb,var(--card) 92%,transparent);
@@ -185,7 +185,7 @@ main{max-width:640px;margin:0 auto}
 .sheet-wrap[hidden]{display:none}
 .sheet{background:var(--card);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;
   padding:8px 16px calc(env(safe-area-inset-bottom) + 20px);-webkit-overflow-scrolling:touch}
-.sheet .card,.sheet .menu{background:var(--card2)}
+.sheet .card,.sheet .menu,.sheet .tx,.sheet .anarow{background:var(--card2)}
 .sheet input,.sheet select,.sheet textarea{background:var(--card2)}
 .grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 12px}
 .preview{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:12px}
@@ -513,19 +513,45 @@ const standalone = navigator.standalone === true || matchMedia('(display-mode: s
 // ---------- ui state ----------
 let cur = periodOf(today());
 let tab = 'home', sub = '';
-let homeAcc = '', homeAll = true, homeQ = '', searchOn = false, homeLimit = 200;
-let anaAcc = '', anaAll = false, anaType = 'expense', anaOff = new Set(), anaOpen = new Set();
+let homeAcc = '', homeQ = '', searchOn = false, homeLimit = 200;
+let anaAcc = '', anaType = 'expense', anaOff = new Set();
+// date range shown on a screen: budget period (with ‹ ›), all time, or custom dates
+const VIEW = {home: {mode: 'all', from: '', to: ''}, ana: {mode: 'period', from: '', to: ''}, budget: {mode: 'period'}};
 let budMode = 'overview', catType = 'expense';
 let imp = null, A = null;
 
 // ---------- shared pieces ----------
 const icon = (e, c, cls = '') => `<span class="ic ${cls}" style="--c:${c || '#64748b'}">${esc(e || '🏷️')}</span>`;
+function rangeOf(kind) {
+  const v = VIEW[kind];
+  if (v.mode === 'all') return ['0000', '9999'];
+  if (v.mode === 'custom') return [v.from, v.to];
+  return [periodStart(cur), periodEnd(cur)];
+}
+const shortDate = d => +d.slice(8) + ' ' + MON_SHORT[+d.slice(5, 7) - 1] + ' ' + d.slice(0, 4);
 function periodBar(kind) {
-  const all = kind === 'home' ? homeAll : kind === 'ana' ? anaAll : false;
-  const chip = all ? 'Всё время' : `${monthLabel(cur)}<small>${periodRange(cur)}</small>`;
-  return `<div class="pnav">${all ? '' : '<button class="pbtn" data-act="pprev" aria-label="Предыдущий период">‹</button>'}
+  const v = VIEW[kind], nav = v.mode === 'period';
+  const chip = v.mode === 'all' ? 'Всё время' : v.mode === 'custom' ? `Свой период<small>${shortDate(v.from)} – ${shortDate(v.to)}</small>`
+    : `${monthLabel(cur)}<small>${periodRange(cur)}</small>`;
+  return `<div class="pnav">${nav ? '<button class="pbtn" data-act="pprev" aria-label="Предыдущий период">‹</button>' : ''}
     <button class="pchip" data-act="pmode" data-k="${kind}">${chip}</button>
-    ${all ? '' : '<button class="pbtn" data-act="pnext" aria-label="Следующий период">›</button>'}</div>`;
+    ${nav ? '<button class="pbtn" data-act="pnext" aria-label="Следующий период">›</button>' : ''}</div>`;
+}
+function sheetPeriod(kind) {
+  const v = VIEW[kind], [a, b] = v.mode === 'custom' ? [v.from, v.to] : v.mode === 'period' ? [periodStart(cur), periodEnd(cur)] : [today().slice(0, 4) + '-01-01', today()];
+  const y = +today().slice(0, 4);
+  const presets = [['Этот год', y + '-01-01', y + '-12-31'], ['Прошлый год', (y - 1) + '-01-01', (y - 1) + '-12-31'],
+    ['Последние 3 бюджетных месяца', periodStart(shiftMonth(periodOf(today()), -2)), periodEnd(periodOf(today()))],
+    ['Последние 6 бюджетных месяцев', periodStart(shiftMonth(periodOf(today()), -5)), periodEnd(periodOf(today()))]];
+  openSheet(`<h2>Период</h2>
+    <div class="menu">
+      <button data-act="setMode" data-k="${kind}" data-m="period"><span>Бюджетный месяц<br><small class="muted">листать стрелками ‹ ›</small></span>${v.mode === 'period' ? '<span class="go">✓</span>' : ''}</button>
+      <button data-act="setMode" data-k="${kind}" data-m="all"><span>Всё время</span>${v.mode === 'all' ? '<span class="go">✓</span>' : ''}</button>
+    </div>
+    <h3>Свой период</h3>
+    <div class="maps"><label style="margin:0">С<input type="date" id="rFrom" value="${a}"></label><label style="margin:0">По<input type="date" id="rTo" value="${b}"></label></div>
+    <div class="btns" style="flex-wrap:wrap;gap:8px">${presets.map(([l, f, t]) => `<button class="btn small ghost" data-act="rPreset" data-f="${f}" data-t="${t}">${l}</button>`).join('')}</div>
+    <div class="btns"><button class="btn" data-act="setRange" data-k="${kind}">Показать</button></div>`);
 }
 function accSelect(attr, sel, withAll) {
   return (withAll ? `<option value="">Все счета</option>` : '') +
@@ -603,7 +629,7 @@ function installBanner() {
 function vHome() {
   if (homeAcc && !ACC.has(homeAcc)) homeAcc = '';
   const bal = balances();
-  const [a, b] = homeAll ? ['0000', '9999'] : [periodStart(cur), periodEnd(cur)];
+  const [a, b] = rangeOf('home'), homeAll = VIEW.home.mode === 'all';
   let list = S.tx.filter(t => t.date >= a && t.date <= b && (!homeAcc || t.acc === homeAcc || t.to === homeAcc));
   const q = norm(homeQ); if (q) list = list.filter(t => matchQ(t, q));
   let inc = 0, exp = 0;
@@ -636,27 +662,29 @@ function vAccounts() {
     <button class="btn ghost wide" style="margin-top:12px" data-act="newAcc">+ Новый счёт</button>`;
 }
 
+// where an operation lands in analytics: [category id, subcategory id or 'own', amount], or null if it doesn't count
+function anaKey(t, a, b) {
+  if (t.date < a || t.date > b || (anaAcc && t.acc !== anaAcc)) return null;
+  if (t.type === anaType) return [CAT.has(t.cat) ? t.cat : 'none', SUB.has(t.sub) ? t.sub : 'own', t.amount];
+  if (t.type === 'transfer' && anaType === 'expense') {
+    const to = ACC.get(t.to);
+    if (to && CAT.has(to.budgetCat)) return [to.budgetCat, 'own', t.amount];
+    if (to && to.kind === 'debt') return ['debt', 'own', t.amount];
+  }
+  return null;
+}
 function anaCalc(a, b) {
   const cats = new Map();
-  const add = (cid, sid, v) => {
-    const g = cats.get(cid) || {total: 0, subs: new Map()}; g.total += v;
-    const k = sid || 'own'; g.subs.set(k, (g.subs.get(k) || 0) + v); cats.set(cid, g);
-  };
   for (const t of S.tx) {
-    if (t.date < a || t.date > b) continue;
-    if (t.type === anaType) {
-      if (anaAcc && t.acc !== anaAcc) continue;
-      add(CAT.has(t.cat) ? t.cat : 'none', SUB.has(t.sub) ? t.sub : '', t.amount);
-    } else if (t.type === 'transfer' && anaType === 'expense') {
-      if (anaAcc && t.acc !== anaAcc) continue;
-      const to = ACC.get(t.to);
-      if (to && CAT.has(to.budgetCat)) add(to.budgetCat, '', t.amount);
-      else if (to && to.kind === 'debt') add('debt', '', t.amount);
-    }
+    const k = anaKey(t, a, b); if (!k) continue;
+    const [cid, sid, v] = k, g = cats.get(cid) || {total: 0, subs: new Map()};
+    g.total += v; g.subs.set(sid, (g.subs.get(sid) || 0) + v); cats.set(cid, g);
   }
   return [...cats].filter(([, g]) => Math.abs(g.total) > 0.004).sort((x, y) => y[1].total - x[1].total);
 }
 const catInfo = id => id === 'none' ? {name: 'Без категории', icon: '❔', color: '#64748b'} : id === 'debt' ? {name: 'Долги', icon: '🤝', color: '#a855f7'} : CAT.get(id);
+// a subcategory row, or the category itself for operations without a subcategory
+const subInfo = (cid, sid) => SUB.get(sid) || catInfo(cid);
 function arcPath(r0, r1, a0, a1) {
   const p = (r, a) => (150 + r * Math.cos(a)).toFixed(2) + ' ' + (150 + r * Math.sin(a)).toFixed(2);
   const large = a1 - a0 > Math.PI ? 1 : 0;
@@ -686,25 +714,21 @@ function donut(rows, total) {
 }
 function vAnalytics() {
   if (anaAcc && !ACC.has(anaAcc)) anaAcc = '';
-  const [a, b] = anaAll ? ['0000', '9999'] : [periodStart(cur), periodEnd(cur)];
+  const [a, b] = rangeOf('ana');
   const rows = anaCalc(a, b);
   const total = rows.filter(([id]) => !anaOff.has(id)).reduce((s, [, g]) => s + g.total, 0);
   let h = `<div class="hdr">${accChip('data-anaacc', anaAcc, true)}</div>
     <div class="seg"><button class="${anaType === 'income' ? 'on inc' : ''}" data-act="anaType" data-v="income">↙ Доход</button><button class="${anaType === 'expense' ? 'on exp' : ''}" data-act="anaType" data-v="expense">↗ Расход</button></div>
     ${periodBar('ana')}${donut(rows, total)}`;
   if (!rows.length) return h + `<div class="empty"><p>За этот период операций нет</p></div>`;
+  const allOn = rows.every(([id]) => !anaOff.has(id));
   h += `<div class="anarow"><span class="nmb" style="flex:1;padding-left:6px;font-weight:600">Все категории</span><span class="num">${money(total)}</span>
-    <button class="chk ${anaOff.size ? '' : 'on'}" data-act="anaAll" aria-label="Все категории">✓</button></div>`;
+    <button class="chk ${allOn ? 'on' : ''}" data-act="anaAll" aria-label="Включить или выключить все категории">✓</button></div>`;
   for (const [id, g] of rows) {
     const c = catInfo(id), off = anaOff.has(id);
-    h += `<div class="anarow ${off ? 'off' : ''}"><button class="nmb" data-act="anaOpen" data-id="${id}">${icon(c.icon, c.color, 'sm')}<span>${esc(c.name)}</span></button>
-      <span class="num">${money(g.total)}</span><button class="chk ${off ? '' : 'on'}" data-act="anaToggle" data-id="${id}" aria-label="Учитывать">✓</button></div>`;
-    if (anaOpen.has(id)) {
-      h += `<div class="subrows">${[...g.subs].sort((x, y) => y[1] - x[1]).map(([sid, v]) => {
-        const s = SUB.get(sid);
-        return `<div class="row"><span>${s ? esc(s.icon + ' ' + s.name) : '<span class="muted">Без подкатегории</span>'}</span><span class="num small">${money(v)} · ${total ? Math.round(v / total * 100) : 0}%</span></div>`;
-      }).join('')}</div>`;
-    }
+    h += `<div class="anarow ${off ? 'off' : ''}"><button class="nmb" data-act="anaOpen" data-id="${id}">${icon(c.icon, c.color, 'sm')}<span>${esc(c.name)}</span>
+      <span class="num" style="margin-left:auto;font-weight:500">${money(g.total)}</span></button>
+      <button class="chk ${off ? '' : 'on'}" data-act="anaToggle" data-id="${id}" aria-label="Учитывать">✓</button></div>`;
   }
   return h;
 }
@@ -757,7 +781,7 @@ function vPlan() {
   <div class="plansum" id="plansum">${planSum(cur)}</div>`;
   for (const c of S.cats.filter(c => c.type === 'expense')) {
     h += `<section class="card" data-cid="${c.id}"><div class="pc-head">${icon(c.icon, c.color, 'sm')}<b>${esc(c.name)}</b><span class="pc-total num" data-total>${money(catLimit(L, c))}</span></div>
-      <div class="srow"><span class="lbl muted">${c.subs.length ? 'Без подкатегории' : 'Лимит'}</span><input class="amt" type="text" inputmode="decimal" data-lim="${c.id}" value="${L[c.id] || ''}" placeholder="0"></div>
+      <div class="srow"><span class="lbl ${c.subs.length ? '' : 'muted'}">${c.subs.length ? esc(c.icon + ' ' + c.name + ' (общее)') : 'Лимит'}</span><input class="amt" type="text" inputmode="decimal" data-lim="${c.id}" value="${L[c.id] || ''}" placeholder="0"></div>
       ${c.subs.map(s => `<div class="srow"><span class="lbl">${esc(s.icon)} ${esc(s.name)}</span><input class="amt" type="text" inputmode="decimal" data-lim="${s.id}" value="${L[s.id] || ''}" placeholder="0"></div>`).join('')}
     </section>`;
   }
@@ -806,8 +830,16 @@ function vCats() {
 }
 
 // ---------- sheets ----------
-function openSheet(html) { $('#sheetBody').innerHTML = html; $('#sheet').hidden = false; document.body.style.overflow = 'hidden'; $('.sheet').scrollTop = 0; }
-function closeSheet() { $('#sheet').hidden = true; document.body.style.overflow = A ? 'hidden' : ''; imp = null; }
+// ctx: how to reopen this sheet after editing an operation from it
+function openSheet(html, ctx = null) {
+  const same = !$('#sheet').hidden && sheetCtx && ctx && String(sheetCtx) === String(ctx);
+  $('#sheetBody').innerHTML = html; $('#sheet').hidden = false; document.body.style.overflow = 'hidden';
+  if (!same) $('.sheet').scrollTop = 0;
+  sheetCtx = ctx;
+}
+// reopens the sheet an operation was opened from, after editing it
+let sheetCtx = null;
+function closeSheet() { $('#sheet').hidden = true; document.body.style.overflow = A ? 'hidden' : ''; imp = null; sheetCtx = null; }
 $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
 
 function iconPicker(cur) {
@@ -854,10 +886,30 @@ function sheetCat(id, subId, parentId) {
       <button class="btn" data-act="saveCat" data-id="${c ? c.id : ''}" data-sid="${s ? s.id : ''}" data-parent="${parent && !s ? parent.id : ''}">Сохранить</button></div>`);
   if (!item.name) setTimeout(() => $('#fName').focus(), 150);
 }
+// analytics: one category for the chosen period/account, split by subcategory, with its operations
+function sheetAnaCat(id, sid) {
+  const [a, b] = rangeOf('ana'), c = catInfo(id);
+  const list = S.tx.filter(t => { const k = anaKey(t, a, b); return k && k[0] === id; });
+  const subs = new Map();
+  for (const t of list) { const k = anaKey(t, a, b); subs.set(k[1], (subs.get(k[1]) || 0) + k[2]); }
+  const total = [...subs.values()].reduce((s, v) => s + v, 0);
+  const shown = sid ? list.filter(t => anaKey(t, a, b)[1] === sid) : list;
+  const row = (key, name, ic, color, v) => `<button class="anarow" style="width:100%;${sid === key ? 'outline:2px solid var(--accent);outline-offset:-2px' : ''}" data-act="anaSub" data-id="${id}" data-sid="${key}">
+    ${icon(ic, color, 'sm')}<span style="flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</span>
+    <span class="num small">${money(v)} · ${total ? Math.round(v / total * 100) : 0}%</span></button>`;
+  const v = VIEW.ana;
+  openSheet(`<h2>${esc(c.icon)} ${esc(c.name)}</h2>
+    <div class="row small"><span>${v.mode === 'all' ? 'Всё время' : v.mode === 'custom' ? shortDate(v.from) + ' – ' + shortDate(v.to) : periodRange(cur)}${anaAcc ? ' · ' + esc(accName(anaAcc)) : ''}</span><b class="num" style="color:var(--text)">${money(total)}</b></div>
+    ${subs.size > 1 ? `<h3>По подкатегориям</h3>${row('', 'Все', c.icon, c.color, total)}
+      ${[...subs].sort((x, y) => y[1] - x[1]).map(([k, val]) => { const s = subInfo(id, k); return row(k, s.name, s.icon, s.color, val); }).join('')}` : ''}
+    <h3>Операции${sid ? ': ' + esc(subInfo(id, sid).name) : ''} (${shown.length})</h3>
+    ${txList(shown, anaAcc)}
+    <div class="btns"><button class="btn ghost" data-act="close">Закрыть</button></div>`, () => sheetAnaCat(id, sid));
+}
 function sheetBudCat(id) {
   const c = CAT.get(id), r = budgetCalc(cur), lim = catLimit(r.L, c), sp = r.cat.get(id) || 0;
   const list = S.tx.filter(t => t.date >= r.a && t.date <= r.b && (t.type === 'expense' && t.cat === id || t.type === 'transfer' && ((ACC.get(t.to) || {}).budgetCat === id || (ACC.get(t.acc) || {}).budgetCat === id)));
-  const rows = [{name: 'Без подкатегории', icon: '', key: id + ':own', lim: num(r.L[id])}].concat(c.subs.map(s => ({name: s.name, icon: s.icon, key: s.id, lim: num(r.L[s.id])})));
+  const rows = [{name: c.name + ' (общее)', icon: c.icon, key: id + ':own', lim: num(r.L[id])}].concat(c.subs.map(s => ({name: s.name, icon: s.icon, key: s.id, lim: num(r.L[s.id])})));
   openSheet(`<h2>${esc(c.icon)} ${esc(c.name)}</h2>
     <div class="row small num"><span>Потрачено ${money(sp)} из ${money(lim)}</span><span class="${lim - sp < 0 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div>
     ${c.subs.length ? `<h3>По подкатегориям</h3><div class="card">${rows.filter(x => x.lim > 0 || r.sub.get(x.key)).map(x => {
@@ -866,7 +918,7 @@ function sheetBudCat(id) {
         <div class="bar" style="height:5px;margin-top:4px"><i class="${sc}" style="width:${Math.max(0, w)}%"></i></div></div>`;
     }).join('') || '<span class="muted">Нет данных</span>'}</div>` : ''}
     <h3>Операции</h3>${list.length ? txList(list, '') : '<p class="muted">Пока нет.</p>'}
-    <div class="btns"><button class="btn ghost" data-act="goPlan">Изменить лимиты</button><button class="btn ghost" data-act="close">Закрыть</button></div>`);
+    <div class="btns"><button class="btn ghost" data-act="goPlan">Изменить лимиты</button><button class="btn ghost" data-act="close">Закрыть</button></div>`, () => sheetBudCat(id));
 }
 
 // ---------- add / edit operation ----------
@@ -899,7 +951,11 @@ function openAdd(id) {
   $('#add').hidden = false;
   renderAdd();
 }
-function closeAdd() { $('#add').hidden = true; A = null; document.body.style.overflow = ''; }
+function closeAdd() {
+  const back = A && A.back;
+  $('#add').hidden = true; A = null; document.body.style.overflow = '';
+  if (back) { index(); back(); }
+}
 function addAmountHtml() {
   const v = evalExpr(A.expr), hasOp = /[+−×÷]/.test(A.expr);
   const color = A.type === 'income' ? 'var(--inc)' : A.type === 'expense' ? (A.refund ? 'var(--inc)' : 'var(--text)') : A.type === 'debt' ? '#bf5af2' : '#0a84ff';
@@ -1196,7 +1252,15 @@ const ACT = {
   back: () => { sub = ''; render(); },
   pprev: () => { cur = shiftMonth(cur, -1); render(); },
   pnext: () => { cur = shiftMonth(cur, 1); render(); },
-  pmode: el => { const k = el.dataset.k; if (k === 'home') homeAll = !homeAll; else if (k === 'ana') anaAll = !anaAll; render(); },
+  pmode: el => { if (el.dataset.k !== 'budget') sheetPeriod(el.dataset.k); },
+  setMode: el => { VIEW[el.dataset.k].mode = el.dataset.m; if (el.dataset.m === 'period') cur = periodOf(today()); homeLimit = 200; closeSheet(); render(); },
+  rPreset: el => { $('#rFrom').value = el.dataset.f; $('#rTo').value = el.dataset.t; },
+  setRange: el => {
+    let f = $('#rFrom').value, t = $('#rTo').value;
+    if (!f || !t) { toast('Укажите обе даты'); return; }
+    if (f > t) [f, t] = [t, f];
+    Object.assign(VIEW[el.dataset.k], {mode: 'custom', from: f, to: t}); homeLimit = 200; closeSheet(); render();
+  },
   search: () => { searchOn = !searchOn; if (!searchOn) homeQ = ''; render(); if (searchOn) setTimeout(() => $('[data-search]').focus(), 50); },
   showMore: () => { homeLimit += 300; render(); },
   starter: () => {
@@ -1271,19 +1335,27 @@ const ACT = {
     save(); closeSheet(); render();
   },
   // analytics
-  anaType: el => { anaType = el.dataset.v; anaOff.clear(); anaOpen.clear(); render(); },
+  anaType: el => { anaType = el.dataset.v; anaOff.clear(); render(); },
   anaToggle: el => { const id = el.dataset.id; anaOff.has(id) ? anaOff.delete(id) : anaOff.add(id); render(); },
-  anaAll: () => { anaOff.clear(); render(); },
-  anaOpen: el => { const id = el.dataset.id; anaOpen.has(id) ? anaOpen.delete(id) : anaOpen.add(id); render(); },
+  anaAll: () => {
+    const [a, b] = rangeOf('ana'), ids = anaCalc(a, b).map(([id]) => id);
+    if (ids.every(id => !anaOff.has(id))) ids.forEach(id => anaOff.add(id)); else anaOff.clear();
+    render();
+  },
+  anaOpen: el => sheetAnaCat(el.dataset.id, ''),
+  anaSub: el => { sheetAnaCat(el.dataset.id, el.dataset.sid); },
   // budget
   budMode: el => { budMode = el.dataset.v; render(); },
   budCat: el => sheetBudCat(el.dataset.id),
   goPlan: () => { closeSheet(); budMode = 'plan'; render(); },
   editIncome: () => { budMode = 'plan'; render(); setTimeout(() => $('[data-income]')?.focus(), 50); },
-  showUnc: () => { const r = budgetCalc(cur); openSheet(`<h2>Без категории</h2><p class="hint">Нажмите на операцию, чтобы выбрать категорию.</p>${txList(r.uncList, '')}`); },
+  showUnc: () => {
+    const r = budgetCalc(cur);
+    openSheet(`<h2>Без категории</h2><p class="hint">Нажмите на операцию, чтобы выбрать категорию.</p>${r.uncList.length ? txList(r.uncList, '') : '<p class="muted">Всё разобрано 👍</p>'}`, ACT.showUnc);
+  },
   // operations
   add: () => openAdd(''),
-  edit: el => { closeSheet(); openAdd(el.dataset.id); },
+  edit: el => { const back = sheetCtx; closeSheet(); openAdd(el.dataset.id); A.back = back; },
   closeAdd: () => closeAdd(),
   addType: el => {
     const v = el.dataset.v; if (A.type === v) return;
