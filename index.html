@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f4f5f7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0d1117" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f2f2f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Бюджет">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -15,163 +15,255 @@
 <title>Бюджет</title>
 <style>
 :root{
-  --bg:#f4f5f7;--card:#ffffff;--text:#14181f;--muted:#6b7280;--line:#e5e7eb;
-  --accent:#0f766e;--accent-text:#ffffff;--accent-soft:#e6f4f2;
-  --ok:#16a34a;--ok-soft:#dcfce7;--warn:#c2410c;--warn-soft:#ffedd5;--bad:#dc2626;--bad-soft:#fee2e2;
-  --track:#eceef1;--shadow:0 1px 2px rgba(0,0,0,.05);
+  --bg:#f2f2f7;--card:#ffffff;--card2:#f2f2f7;--text:#111114;--muted:#6e6e73;--line:#e5e5ea;
+  --accent:#0f766e;--accent-text:#ffffff;--accent-soft:#e3f3f0;
+  --inc:#16a34a;--exp:#ea580c;--ok:#16a34a;--ok-soft:#dcfce7;--warn:#c2410c;--warn-soft:#ffedd5;--bad:#dc2626;--bad-soft:#fee2e2;
+  --track:#e9e9ee;--shadow:0 1px 2px rgba(0,0,0,.05);--key:#ffffff;--key2:#e5e5ea;
   color-scheme:light dark;
 }
 @media (prefers-color-scheme:dark){:root{
-  --bg:#0d1117;--card:#161b22;--text:#e6edf3;--muted:#8b949e;--line:#2a3038;
-  --accent:#2dd4bf;--accent-text:#04201c;--accent-soft:#0f2e2b;
-  --ok:#3fb950;--ok-soft:#12301b;--warn:#f0883e;--warn-soft:#3a2312;--bad:#f85149;--bad-soft:#3d1517;
-  --track:#232a33;--shadow:none;
+  --bg:#000000;--card:#1c1c1e;--card2:#2c2c2e;--text:#f2f2f7;--muted:#8e8e93;--line:#2c2c2e;
+  --accent:#2dd4bf;--accent-text:#00201c;--accent-soft:#0f2e2a;
+  --inc:#30d158;--exp:#ff9f0a;--ok:#30d158;--ok-soft:#0f2d17;--warn:#ff9f0a;--warn-soft:#33240b;--bad:#ff453a;--bad-soft:#3a1412;
+  --track:#2c2c2e;--shadow:none;--key:#2c2c2e;--key2:#1c1c1e;
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text)}
 body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
-  padding:calc(env(safe-area-inset-top) + 56px) 16px calc(env(safe-area-inset-bottom) + 84px);
-  min-height:100vh;-webkit-text-size-adjust:100%}
-button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
-input,select,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:1px solid var(--line);
-  border-radius:10px;padding:10px 12px;width:100%;min-width:0}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+  padding:0 16px calc(env(safe-area-inset-bottom) + 150px);min-height:100vh;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+input,select,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--card2);border:1px solid transparent;
+  border-radius:12px;padding:11px 12px;width:100%;min-width:0;appearance:none;-webkit-appearance:none}
+select{background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+  background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-2px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 0}
-label>input,label>select,label>textarea{margin-top:4px;color:var(--text)}
-h2{font-size:20px;margin:0 0 8px}
-h3{font-size:15px;margin:20px 0 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+label>input,label>select,label>textarea{margin-top:5px}
+h2{font-size:21px;margin:0 0 10px}
+h3{font-size:13px;margin:22px 4px 8px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
 .hint{font-size:13px;color:var(--muted);margin:6px 0 0}
-.muted{color:var(--muted)}
-.neg{color:var(--bad)}
-.pos{color:var(--ok)}
+.muted{color:var(--muted)}.neg{color:var(--bad)}.inc{color:var(--inc)}.exp{color:var(--exp)}
+.num{font-variant-numeric:tabular-nums}
 main{max-width:640px;margin:0 auto}
 
-/* top bar */
-.top{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--bg);
-  padding:env(safe-area-inset-top) 8px 0;display:flex;align-items:center;justify-content:center;height:calc(env(safe-area-inset-top) + 52px);
-  border-bottom:1px solid var(--line)}
-.top .mtitle{font-weight:650;font-size:17px;min-width:170px;text-align:center;line-height:1.2}
-.top .mtitle small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
-.icon{width:44px;height:44px;border-radius:12px;font-size:26px;line-height:1;color:var(--accent)}
-.icon:active{background:var(--accent-soft)}
+/* header */
+.hdr{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 8px) 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px;
+  display:flex;align-items:center;gap:8px}
+.hdr h1{font-size:28px;margin:0;flex:1;letter-spacing:-.02em}
+.hbtns{display:flex;gap:6px;margin-left:auto}
+.ibtn{width:42px;height:42px;border-radius:50%;background:var(--card);display:inline-flex;align-items:center;justify-content:center;font-size:18px}
+.ibtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.ibtn.on{background:var(--accent);color:var(--accent-text)}
 
-/* tabs */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:5;display:flex;background:var(--card);border-top:1px solid var(--line);
-  padding:6px 4px calc(env(safe-area-inset-bottom) + 6px)}
-.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--muted);padding:4px 0}
-.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.tabs button.on{color:var(--accent)}
+/* chips */
+.ic{width:40px;height:40px;border-radius:12px;flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:21px;
+  background:var(--card2);background:color-mix(in srgb,var(--c,#64748b) 22%,transparent)}
+.ic.sm{width:32px;height:32px;border-radius:10px;font-size:17px}
+.ic.round{border-radius:50%}
+.selchip{position:relative;display:inline-flex;align-items:center;gap:10px;background:var(--card);border-radius:22px;padding:5px 14px 5px 5px;margin:0;color:var(--text);max-width:62%}
+.selchip b{display:block;font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.selchip small{display:block;font-size:12px;color:var(--muted)}
+.selchip select,.chip select,.chip input{position:absolute;inset:0;opacity:0;width:100%;height:100%;margin:0;padding:0}
+.chip{position:relative;display:inline-flex;align-items:center;gap:8px;background:var(--card);border-radius:20px;padding:8px 14px;margin:0;color:var(--text);font-size:15px;min-height:40px}
+
+/* period nav */
+.pnav{display:flex;align-items:center;justify-content:center;gap:6px;margin:4px 0 12px}
+.pchip{background:var(--card);border-radius:18px;padding:7px 16px;font-weight:600;text-align:center;line-height:1.15;min-width:150px}
+.pchip small{display:block;font-size:11px;font-weight:500;color:var(--muted)}
+.pbtn{width:38px;height:38px;border-radius:50%;background:var(--card);font-size:22px;color:var(--accent);display:inline-flex;align-items:center;justify-content:center}
+
+/* hero total */
+.total{text-align:center;margin:6px 0 14px}
+.total .lbl{font-size:13px;color:var(--muted)}
+.total .big{font-size:42px;font-weight:700;letter-spacing:-.03em;margin:2px 0 4px}
+.total .flows{display:flex;gap:16px;justify-content:center;font-weight:600}
+
+/* search */
+.search{margin:0 0 10px}
+
+/* tx list */
+.dhead{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:16px 4px 6px}
+.tx{display:flex;width:100%;gap:12px;align-items:center;background:var(--card);border-radius:16px;padding:10px 12px;margin:0 0 6px}
+.tx:active,.cat:active,.arow button:active{opacity:.7}
+.tx .t{flex:1;min-width:0}
+.tx b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx .amt{font-weight:600;white-space:nowrap}
+.more{display:block;width:100%;text-align:center;color:var(--accent);padding:14px;font-weight:600}
 
 /* cards */
-.card{background:var(--card);border-radius:16px;padding:14px 16px;margin:0 0 12px;box-shadow:var(--shadow)}
-.hero{padding:18px 16px}
+.card{background:var(--card);border-radius:18px;padding:14px 16px;margin:0 0 12px;box-shadow:var(--shadow)}
 .hero .lbl{font-size:13px;color:var(--muted)}
-.hero .big{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:2px 0 10px;font-variant-numeric:tabular-nums}
+.hero .big{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:2px 0 10px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 12px}
-.grid .card{margin:0;display:block;text-align:left;width:100%}
-.stat .lbl{font-size:12px;color:var(--muted)}
-.stat .val{font-size:18px;font-weight:650;margin-top:2px;font-variant-numeric:tabular-nums}
-.stat .sub{font-size:11px;color:var(--muted);margin-top:2px}
+.grid .card{margin:0;display:block;width:100%}
+.stat .lbl{font-size:12px;color:var(--muted)}.stat .val{font-size:18px;font-weight:650;margin-top:2px}.stat .sub{font-size:11px;color:var(--muted);margin-top:2px}
 .bar{height:8px;border-radius:99px;background:var(--track);overflow:hidden}
 .bar i{display:block;height:100%;border-radius:99px;background:var(--ok)}
 .bar i.warn{background:var(--warn)}.bar i.bad{background:var(--bad)}.bar i.muted{background:var(--muted)}
 .row{display:flex;justify-content:space-between;gap:8px;align-items:center}
-.small{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-
-.cat{display:block;width:100%;text-align:left;background:var(--card);border-radius:14px;padding:12px 14px;margin:0 0 8px;box-shadow:var(--shadow)}
-.cat:active,.tx:active{opacity:.7}
-.cat .row1{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
-.cat .cname{font-weight:600}
-.cat .row2{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
-.chip{font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
-.chip.ok{background:var(--ok-soft);color:var(--ok)}.chip.warn{background:var(--warn-soft);color:var(--warn)}
-.chip.bad{background:var(--bad-soft);color:var(--bad)}.chip.muted{background:var(--track);color:var(--muted)}
-
-.alert{display:block;width:100%;text-align:left;background:var(--warn-soft);color:var(--warn);border-radius:14px;padding:12px 14px;margin:0 0 12px;font-weight:550}
-.banner{background:var(--accent-soft);border-radius:14px;padding:12px 14px;margin:0 0 12px;font-size:14px}
+.small{font-size:13px;color:var(--muted)}
+.cat{display:block;width:100%;background:var(--card);border-radius:16px;padding:12px 14px;margin:0 0 8px;box-shadow:var(--shadow)}
+.cat .r1{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.cat .r1 b{flex:1;font-weight:600}
+.cat .r2{display:flex;justify-content:space-between;gap:8px;margin-top:6px;font-size:13px;color:var(--muted)}
+.chipst{font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
+.chipst.ok{background:var(--ok-soft);color:var(--ok)}.chipst.warn{background:var(--warn-soft);color:var(--warn)}
+.chipst.bad{background:var(--bad-soft);color:var(--bad)}.chipst.muted{background:var(--track);color:var(--muted)}
+.alert{display:block;width:100%;background:var(--warn-soft);color:var(--warn);border-radius:16px;padding:12px 14px;margin:0 0 12px;font-weight:550}
+.banner{background:var(--accent-soft);border-radius:16px;padding:12px 14px;margin:0 0 12px;font-size:14px}
 .banner .row{margin-top:8px;justify-content:flex-start}
-
+.seg{display:flex;background:var(--card);border-radius:12px;padding:3px;margin:0 0 12px}
+.seg>*{flex:1;text-align:center;padding:8px 6px;border-radius:9px;color:var(--muted);font-weight:600;font-size:14px;margin:0}
+.seg .on,.seg input:checked+span{background:var(--card2);color:var(--text)}
+.seg label{padding:0}.seg label span{display:block;padding:8px 6px;border-radius:9px}.seg input{display:none}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--accent);color:var(--accent-text);
-  border-radius:12px;padding:12px 16px;font-weight:600;min-height:44px}
-.btn.ghost{background:var(--accent-soft);color:var(--accent)}
-.btn.danger{background:var(--bad-soft);color:var(--bad)}
-.btn.small{padding:8px 12px;min-height:36px;font-size:14px}
-.btn.wide{width:100%;margin:0 0 10px}
+  border-radius:14px;padding:12px 16px;font-weight:600;min-height:46px;text-align:center}
+.btn.ghost{background:var(--accent-soft);color:var(--accent)}.btn.danger{background:var(--bad-soft);color:var(--bad)}
+.btn.small{padding:8px 12px;min-height:36px;font-size:14px}.btn.wide{width:100%;margin:0 0 10px}
 .btn:active{opacity:.75}
 .btns{display:flex;gap:10px;margin-top:16px}.btns .btn{flex:1}
 
+/* accounts */
+.arow{display:flex;align-items:center;gap:6px;background:var(--card);border-radius:16px;margin:0 0 6px;padding-right:6px}
+.arow>button:first-child{flex:1;display:flex;align-items:center;gap:12px;padding:10px 6px 10px 12px;min-width:0}
+.arow .nm{flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.arow .bal{font-weight:600;white-space:nowrap}
+.pen{width:38px;height:38px;border-radius:50%;color:var(--muted);display:inline-flex;align-items:center;justify-content:center}
+.pen svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* analytics */
+.donut{display:block;width:100%;max-width:330px;margin:0 auto 8px}
+.donut text{fill:var(--text)}
+.chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--muted);flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:transparent}
+.chk.on{background:var(--text);border-color:var(--text);color:var(--bg)}
+.anarow{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:8px 12px 8px 8px;margin:0 0 6px}
+.anarow>button.nmb{flex:1;display:flex;align-items:center;gap:10px;min-width:0;font-weight:600}
+.anarow .nmb span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.anarow.off{opacity:.45}
+.subrows{margin:-2px 0 8px 18px}
+.subrows .row{padding:6px 12px;font-size:14px}
+
 /* plan */
-.pc-head{display:flex;gap:8px;align-items:center}
-.pc-name{font-weight:650;border-color:transparent;background:transparent;padding:6px 8px;margin-left:-8px}
-.pc-total{font-weight:650;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pc-head{display:flex;gap:10px;align-items:center}
+.pc-head b{flex:1}
+.pc-total{font-weight:650;white-space:nowrap}
 .srow{display:flex;gap:8px;align-items:center;margin-top:8px}
-.srow .amt{width:96px;flex:none;text-align:right}
-.srow .lbl{flex:1;color:var(--muted)}
-.x{width:36px;height:36px;flex:none;border-radius:10px;color:var(--muted);font-size:16px}
-.x:active{background:var(--bad-soft);color:var(--bad)}
-.pc-actions{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
-.pc-actions button{font-size:13px;padding:7px 10px;border-radius:9px;background:var(--bg);color:var(--muted)}
-.pc-actions .add{color:var(--accent)}
-.pc-actions .del{margin-left:auto;color:var(--bad)}
+.srow .lbl{flex:1;min-width:0;display:flex;gap:8px;align-items:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.srow .amt{width:100px;flex:none;text-align:right}
 .plansum{position:sticky;top:calc(env(safe-area-inset-top) + 60px);z-index:2;background:var(--card);border:1px solid var(--line);
-  border-radius:14px;padding:10px 14px;margin:0 0 12px;display:flex;justify-content:space-between;gap:8px;font-size:14px;font-variant-numeric:tabular-nums}
+  border-radius:14px;padding:10px 14px;margin:0 0 12px;display:flex;justify-content:space-between;gap:8px;font-size:14px}
 .plansum b{display:block;font-size:16px}
 
-/* transactions */
-.tools{display:flex;gap:10px;margin:0 0 12px}.tools .btn{flex:1}
-.dhead{font-size:12px;color:var(--muted);margin:14px 4px 6px;font-weight:600}
-.tx{display:flex;width:100%;justify-content:space-between;gap:10px;align-items:center;text-align:left;background:var(--card);
-  padding:11px 14px;border-bottom:1px solid var(--line)}
-.txlist{border-radius:14px;overflow:hidden;box-shadow:var(--shadow)}
-.txlist .tx:last-child{border-bottom:0}
-.tx b{font-weight:550;display:block}
-.tx small{display:block;color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60vw}
-.tx .amt{font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
-.tx .flag{color:var(--warn)}
-.ungroup{display:flex;gap:8px;align-items:center;margin-top:10px}
-.ungroup .nm{flex:1;min-width:0}
-.ungroup select{width:48%;flex:none}
+/* categories manager */
+.cgroup{background:var(--card);border-radius:18px;margin:0 0 10px;overflow:hidden}
+.cgroup .ci{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px}
+.cgroup .ci.sub{padding-left:28px}
+.cgroup .ci b{flex:1;font-weight:600}.cgroup .ci.sub b{font-weight:500}
+.cgroup .acts{display:flex;gap:6px;padding:4px 12px 12px 28px;flex-wrap:wrap}
+.cgroup .acts button{font-size:13px;padding:7px 10px;border-radius:9px;background:var(--card2);color:var(--muted)}
+.cgroup .acts .add{color:var(--accent)}
 
-/* sheet */
-.sheet-wrap{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center}
+/* menu */
+.menu{background:var(--card);border-radius:18px;overflow:hidden;margin:0 0 14px}
+.menu>button,.menu>label.mi{display:flex;width:100%;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);margin:0;color:var(--text);font-size:15px}
+.menu>*:last-child{border-bottom:0}
+.menu .mi span{flex:1}.menu .go{color:var(--muted)}
+
+/* tabs + fab */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;background:var(--card);background:color-mix(in srgb,var(--card) 92%,transparent);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-top:1px solid var(--line);padding:6px 4px calc(env(safe-area-inset-bottom) + 4px)}
+.tabs button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:10.5px;color:var(--muted);padding:3px 0;text-align:center}
+.tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.tabs button.on{color:var(--accent)}
+.fab{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom) + 66px);z-index:7;width:62px;height:62px;border-radius:50%;
+  background:var(--text);color:var(--bg);font-size:34px;font-weight:300;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.3)}
+.fab[hidden]{display:none}
+
+/* sheets */
+.sheet-wrap{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center}
 .sheet-wrap[hidden]{display:none}
-.sheet{background:var(--card);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:20px 20px 0 0;
+.sheet{background:var(--card);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;
   padding:8px 16px calc(env(safe-area-inset-bottom) + 20px);-webkit-overflow-scrolling:touch}
+.sheet .card,.sheet .menu{background:var(--card2)}
+.sheet input,.sheet select,.sheet textarea{background:var(--card2)}
 .grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 12px}
-.seg{display:flex;background:var(--bg);border-radius:10px;padding:3px;margin-top:4px}
-.seg label{flex:1;margin:0;text-align:center}
-.seg input{display:none}
-.seg span{display:block;padding:8px;border-radius:8px;color:var(--muted);font-size:15px}
-.seg input:checked+span{background:var(--card);color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.12)}
-.check{display:flex;gap:10px;align-items:center;color:var(--text);font-size:14px}
-.check input{width:20px;height:20px;flex:none}
-.preview{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:10px}
+.preview{overflow-x:auto;margin-top:10px;border:1px solid var(--line);border-radius:12px}
 .preview table{border-collapse:collapse;font-size:12px;min-width:100%}
 .preview td,.preview th{padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap;text-align:left}
 .preview th{color:var(--muted);font-weight:600}
 .maps{display:grid;grid-template-columns:1fr 1fr;gap:0 10px}
+.check{display:flex;gap:10px;align-items:center;color:var(--text);font-size:14px}
+.check input{width:22px;height:22px;flex:none;appearance:auto;-webkit-appearance:checkbox}
 details{margin-top:12px}summary{color:var(--accent);font-weight:600;padding:6px 0}
+.emojis{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;margin-top:8px}
+.emojis button{font-size:24px;height:42px;border-radius:10px;text-align:center}
+.emojis button.on{background:var(--accent-soft)}
+.colors{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.colors label{margin:0}
+.colors input{display:none}
+.colors span{display:block;width:32px;height:32px;border-radius:50%;background:var(--c);border:3px solid transparent}
+.colors input:checked+span{border-color:var(--text)}
 .empty{text-align:center;padding:36px 8px}
 .empty .logo{width:72px;height:72px;border-radius:18px;margin:0 auto 12px;display:block}
 .empty p{color:var(--muted)}
 ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 
-#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 90px);transform:translateX(-50%) translateY(20px);
+/* add operation (full screen) */
+.add-wrap{position:fixed;inset:0;z-index:25;background:var(--bg);display:flex;flex-direction:column;
+  padding:calc(env(safe-area-inset-top) + 8px) 12px calc(env(safe-area-inset-bottom) + 10px)}
+.add-wrap[hidden]{display:none}
+.add-top{display:flex;align-items:center;gap:8px}
+.types{flex:1;display:flex;background:var(--card);border-radius:22px;padding:3px;justify-content:center}
+.types button{flex:1;padding:8px 4px;border-radius:19px;font-weight:600;font-size:13.5px;color:var(--muted);text-align:center;white-space:nowrap}
+.types button.on{background:var(--card2);color:var(--text)}
+.types button.on.t-expense{color:var(--exp)}.types button.on.t-income{color:var(--inc)}.types button.on.t-transfer{color:#0a84ff}.types button.on.t-debt{color:#bf5af2}
+.amount{flex:1;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.amount .expr{font-size:16px;color:var(--muted);min-height:20px}
+.amount .val{font-size:52px;font-weight:700;letter-spacing:-.03em;line-height:1.1;word-break:break-all}
+.add-row{display:flex;gap:8px;margin:0 0 8px;overflow-x:auto}
+.add-row .chip{flex:none;background:var(--card)}
+.add-row .chip.grow{flex:1;min-width:0}
+.add-row .chip .ic{width:30px;height:30px;font-size:16px;border-radius:9px}
+.add-row .chip b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.add-row .chip small{display:block;font-size:11px;color:var(--muted)}
+.note{margin:0 0 8px;background:var(--card)}
+.catpick{background:var(--card);border-radius:16px;padding:8px 6px 6px;margin:0 0 8px}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
+.strip::-webkit-scrollbar{display:none}
+.strip button{flex:none;width:62px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);text-align:center}
+.strip button span.n{display:block;width:62px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip button .ic{width:46px;height:46px;font-size:23px;border-radius:14px;border:2px solid transparent}
+.strip button.on .ic{border-color:var(--text)}
+.strip button.on{color:var(--text);font-weight:600}
+.strip.subs{margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
+.strip.subs .ic{width:38px;height:38px;font-size:19px;border-radius:12px}
+.catq{margin:0 0 6px}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 8px}
+.keys button{height:52px;border-radius:14px;background:var(--key);font-size:24px;text-align:center;font-weight:500}
+.keys button.op{background:var(--key2);font-size:22px}
+.keys button:active{opacity:.6}
+.save{width:100%;height:54px;border-radius:16px;background:var(--text);color:var(--bg);font-weight:600;font-size:17px;text-align:center}
+.del-link{color:var(--bad);font-weight:600;padding:8px 10px}
+
+#toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 140px);transform:translateX(-50%) translateY(20px);
   background:var(--text);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:14px;opacity:0;pointer-events:none;
-  transition:.25s;z-index:30;max-width:calc(100% - 32px);text-align:center}
+  transition:.25s;z-index:40;max-width:calc(100% - 32px);text-align:center}
 #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 </style>
 </head>
 <body>
-<header class="top" id="top"></header>
 <main id="view"></main>
+<button class="fab" id="fab" data-act="add" aria-label="Добавить операцию">+</button>
 <nav class="tabs">
-  <button data-act="tab" data-tab="overview"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Обзор</button>
-  <button data-act="tab" data-tab="plan"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>План</button>
-  <button data-act="tab" data-tab="tx"><svg viewBox="0 0 24 24"><path d="M7 4v16M7 20l-3-3M7 20l3-3M17 20V4M17 4l-3 3M17 4l3 3"/></svg>Операции</button>
-  <button data-act="tab" data-tab="settings"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Ещё</button>
+  <button data-act="tab" data-tab="home"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Операции</button>
+  <button data-act="tab" data-tab="accounts"><svg viewBox="0 0 24 24"><rect x="3" y="6" width="18" height="13" rx="3"/><path d="M3 10h18M16 15h2"/></svg>Счета</button>
+  <button data-act="tab" data-tab="analytics"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 1 0 9 9h-9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Аналитика</button>
+  <button data-act="tab" data-tab="budget"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>Бюджет</button>
+  <button data-act="tab" data-tab="more"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>Ещё</button>
 </nav>
 <div id="sheet" class="sheet-wrap" hidden><div class="sheet"><div class="grab"></div><div id="sheetBody"></div></div></div>
+<div id="add" class="add-wrap" hidden></div>
 <div id="toast" role="status"></div>
 <input type="file" id="fileCsv" accept=".csv,.tsv,.txt,text/csv,text/plain,text/comma-separated-values" hidden>
 <input type="file" id="fileBackup" accept=".json,application/json" hidden>
@@ -180,44 +272,159 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 'use strict';
 const KEY = 'budget-app-v1';
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-const STARTER = [
-  ['Продукты'], ['Дом', ['Коммуналка','Интернет','Связь']], ['Транспорт', ['Заправка','Такси','Общественный']],
-  ['Покупки'], ['Развлечения', ['Кафе и рестораны','Кино']], ['Здоровье'], ['Подписки'],
-  ['Уход за собой'], ['Подарки'], ['Путешествия'], ['Накопления']
-];
+const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const WD = ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
+const PALETTE = ['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#06b6d4','#3b82f6','#6366f1','#a855f7','#ec4899','#f43f5e','#84cc16','#0ea5e9','#d946ef','#a8a29e','#64748b'];
+const EMOJIS = ('🛒 ☕ 🍔 🍕 🥗 🍎 🧃 🍷 🍽️ 🧹 🧴 🧻 🛍️ 📦 🎮 🏷️ 👕 👟 💻 📱 🪑 🛋️ 🎭 🎬 🏛️ 🎉 🎤 🎨 📚 🎓 🏦 💳 💰 💵 🪙 🐷 🤝 💅 ✂️ 💄 ' +
+  '👤 👶 🐈 🐕 🥫 🪣 💊 🩺 🧪 ❤️ 🏐 ⚽ 💃 🏋️ 🚗 ⛽ 🔌 🧽 🚌 🚕 🔧 🧾 🅿️ 🏠 💧 🌐 📶 💡 🔨 🔁 ▶️ 📺 🎵 🎁 👵 ✈️ 🏖️ 🚆 💼 📈 🧰 🌿 🍼 🎂 💍 🛡️ ⚰️ 👻 🏥 🦷 👓 🧸 🎒 👛 💸 📌').split(' ');
+const ICON_RULES = [[/кофемаш/,'☕'],[/кофе/,'☕'],[/фаст|бургер/,'🍔'],[/продукт|еда/,'🛒'],[/хоз/,'🧹'],[/онлайн/,'📦'],[/игр/,'🎮'],
+  [/одежд/,'👕'],[/техник/,'💻'],[/в дом|мебел/,'🪑'],[/^ин(ое|ые)|проч|друг/,'🏷️'],[/покупк/,'🛍️'],[/кафе|ресторан/,'🍽️'],[/кино/,'🎬'],
+  [/музе|экскурс/,'🏛️'],[/театр/,'🎭'],[/тусов|вечерин/,'🎉'],[/развлеч/,'🎭'],[/кредит/,'🏦'],[/стриж/,'✂️'],[/маник|уход/,'💅'],
+  [/личн/,'👤'],[/кот|кош/,'🐈'],[/корм/,'🥫'],[/наполн/,'🪣'],[/лечени|аптек|витамин/,'💊'],[/анализ|обслед/,'🧪'],[/здоров|врач/,'🩺'],
+  [/подар/,'🎁'],[/волейб/,'🏐'],[/танц/,'💃'],[/^спорт|фитнес/,'🏋️'],[/заправ|топлив/,'⛽'],[/заряд/,'🔌'],[/мойк/,'🧽'],[/обществ|автобус/,'🚌'],
+  [/такси/,'🚕'],[/ремонт|^то /,'🔧'],[/штраф|налог/,'🧾'],[/транспорт|авто|машин/,'🚗'],[/коммун|газ/,'💧'],[/интернет/,'🌐'],[/связь|телефон/,'📱'],
+  [/электр/,'💡'],[/дом|кварт/,'🏠'],[/apple/,'🍎'],[/ютуб|youtube/,'▶️'],[/яндекс|музык/,'🎵'],[/подписк|фин/,'🔁'],[/пенси/,'👵'],[/образов|курс/,'🎓'],
+  [/долг/,'🤝'],[/путеш|отпуск/,'✈️'],[/зарплат|аванс|преми/,'💰'],[/похорон/,'⚰️'],[/каско|страх/,'🛡️'],[/накоп|копил|сбереж/,'🐷'],[/налич|кошел/,'👛'],[/счет|карт/,'💳']];
+const STARTER = {
+  expense: [['Продукты',['Кофе','Фастфуд']],['Хоз товары'],['Покупки',['Одежда','Техника','Онлайн покупки']],['Развлечения',['Кафе и рестораны','Кино']],
+    ['Дом',['Коммуналка','Интернет','Связь']],['Транспорт',['Заправка','Такси']],['Здоровье',['Аптека','Анализы']],['Уход за собой'],['Подписки'],['Подарки'],['Путешествия'],['Долг']],
+  income: [['Зарплата'],['Подарки'],['Прочие доходы']]
+};
 
 const $ = s => document.querySelector(s);
 const uid = () => Math.random().toString(36).slice(2, 10);
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const norm = s => String(s ?? '').trim().toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ');
 const nf = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2});
-const money = n => nf.format(Math.round((n || 0) * 100) / 100) + (S.currency ? ' ' + S.currency : '');
+const round2 = n => Math.round(n * 100) / 100;
+const money = n => nf.format(round2(n || 0)) + (S.currency ? ' ' + S.currency : '');
+const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n));
 const num = v => { const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
 const pad = n => String(n).padStart(2, '0');
 const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
 const today = () => iso(new Date());
-const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+const nowTime = () => { const d = new Date(); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+const ICON_PEN = '<svg viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M14 6l4 4"/></svg>';
+function autoIcon(name, fallback = '🏷️') { const n = norm(name); for (const [r, e] of ICON_RULES) if (r.test(n)) return e; return fallback; }
 
 // ---------- storage ----------
-function blank() { return {version: 1, currency: 'Br', startDay: 1, months: {}, aliases: {}, lastBackup: null, hideInstall: false}; }
+// v2 data: accounts, global categories with subcategories, operations, budget limits per period
+function blank() { return {version: 2, currency: 'Br', startDay: 1, accounts: [], cats: [], tx: [], budgets: {}, lastBackup: null, hideInstall: false, lastAcc: ''}; }
+let S = blank();
+let CAT = new Map(), SUB = new Map(), SUBCAT = new Map(), ACC = new Map();
+function index() {
+  CAT = new Map(); SUB = new Map(); SUBCAT = new Map(); ACC = new Map(S.accounts.map(a => [a.id, a]));
+  for (const c of S.cats) { CAT.set(c.id, c); for (const s of c.subs) { SUB.set(s.id, s); SUBCAT.set(s.id, c); } }
+}
 function load() {
-  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.months) return Object.assign(blank(), d); } catch (e) {}
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d) return migrate(d); } catch (e) { console.error(e); }
   return blank();
 }
-let S = load();
 function save() {
+  index();
   try { localStorage.setItem(KEY, JSON.stringify(S)); }
   catch (e) { toast('Не удалось сохранить: ' + e.message); }
 }
 let saveTimer;
 const saveSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 300); };
+
+// ---------- lookups / creation ----------
+function findCat(type, name) { const n = norm(name); return n ? S.cats.find(c => c.type === type && norm(c.name) === n) : null; }
+function ensureCat(type, name) {
+  let c = findCat(type, name);
+  if (!c) { c = {id: uid(), type, name: name.trim(), icon: autoIcon(name), color: PALETTE[S.cats.length % PALETTE.length], subs: []}; S.cats.push(c); CAT.set(c.id, c); }
+  return c;
+}
+function findSub(c, name) { const n = norm(name); return n ? c.subs.find(s => norm(s.name) === n) : null; }
+function ensureSub(c, name) {
+  let s = findSub(c, name);
+  if (!s) { s = {id: uid(), name: name.trim(), icon: autoIcon(name, c.icon), color: PALETTE[(S.cats.indexOf(c) * 3 + c.subs.length + 5) % PALETTE.length]}; c.subs.push(s); SUB.set(s.id, s); SUBCAT.set(s.id, c); }
+  return s;
+}
+function findAccount(name) { const n = norm(name); return S.accounts.find(a => norm(a.name) === n); }
+function kindOf(raw) { const k = norm(raw); return /debt|долг/.test(k) ? 'debt' : /sav|накоп|deposit|вклад/.test(k) ? 'savings' : 'regular'; }
+function ensureAccount(name, kindRaw) {
+  let a = findAccount(name);
+  if (!a) {
+    const kind = kindOf(kindRaw);
+    a = {id: uid(), name: name.trim(), kind, icon: autoIcon(name, kind === 'debt' ? '🤝' : kind === 'savings' ? '🐷' : '💳'),
+      color: PALETTE[(S.accounts.length * 5 + 3) % PALETTE.length], initial: 0, budgetCat: ''};
+    if (kind === 'debt') { const d = findCat('expense', 'Долг'); if (d) a.budgetCat = d.id; }
+    S.accounts.push(a); ACC.set(a.id, a);
+  }
+  return a;
+}
+const accName = id => (ACC.get(id) || {name: '?'}).name;
+const isDebtTx = t => t.type === 'transfer' && ((ACC.get(t.to) || {}).kind === 'debt' || (ACC.get(t.acc) || {}).kind === 'debt');
+
+// v1 (budget-only: months with category names and operations) -> v2
+function migrate(d) {
+  if (d.version >= 2) {
+    const o = Object.assign(blank(), d);
+    for (const c of o.cats) c.subs = c.subs || [];
+    return o;
+  }
+  const o = blank();
+  for (const k of ['currency', 'startDay', 'lastBackup', 'hideInstall']) if (d[k] != null) o[k] = d[k];
+  S = o; index();
+  const main = ensureAccount('Основной', 'regular');
+  const months = d.months || {}, keys = Object.keys(months).sort(), aliases = d.aliases || {};
+  for (const k of [...keys].reverse()) for (const c of months[k].cats || []) {
+    const cat = ensureCat('expense', c.name);
+    for (const s of c.subs || []) if (norm(s.name) !== norm(c.name)) ensureSub(cat, s.name);
+  }
+  // keep the newest month's category order
+  for (const k of keys) {
+    const m = months[k], L = {};
+    for (const c of m.cats || []) {
+      const cat = findCat('expense', c.name); if (!cat) continue;
+      if (!c.subs || !c.subs.length) L[cat.id] = num(c.limit);
+      else for (const s of c.subs) {
+        if (norm(s.name) === norm(c.name)) L[cat.id] = (L[cat.id] || 0) + num(s.limit);
+        else L[findSub(cat, s.name).id] = num(s.limit);
+      }
+    }
+    o.budgets[k] = {limits: L, income: m.income ?? null};
+    if (m.startDay) o.budgets[k].startDay = m.startDay;
+  }
+  for (const k of keys) {
+    const m = months[k];
+    for (const t of m.tx || []) {
+      const raw = (t.cat || '').trim();
+      const base = {id: t.id || uid(), date: t.date || k + '-' + pad(Math.min(m.startDay || o.startDay || 1, 28)), time: '', note: t.note || '', src: t.src || 'manual'};
+      if (t.extId) base.extId = t.extId;
+      const tr = raw.match(/^Перевод → (.+)$/);
+      if (tr) { const a = ensureAccount(tr[1], 'debt'); o.tx.push(Object.assign(base, {type: 'transfer', acc: main.id, to: a.id, amount: Math.abs(t.amount), toAmount: Math.abs(t.amount)})); continue; }
+      let cat = findCat('expense', aliases[norm(raw)] || raw);
+      if (t.amount > 0 && !cat) { o.tx.push(Object.assign(base, {type: 'income', acc: main.id, amount: t.amount, cat: ensureCat('income', raw || 'Доход').id, sub: ''})); continue; }
+      if (!cat && raw) cat = ensureCat('expense', raw);
+      const sub = cat && t.sub ? ensureSub(cat, t.sub) : null;
+      o.tx.push(Object.assign(base, {type: 'expense', acc: main.id, amount: -t.amount, cat: cat ? cat.id : '', sub: sub ? sub.id : ''}));
+    }
+  }
+  const dolg = findCat('expense', 'Долг');
+  for (const a of o.accounts) if (a.kind === 'debt' && dolg && !a.budgetCat) a.budgetCat = dolg.id;
+  for (const [k, v] of Object.entries(aliases)) {
+    const mm = k.match(/^перевод → (.+)$/), a = mm && findAccount(mm[1]), c = findCat('expense', v);
+    if (a && c) a.budgetCat = c.id;
+  }
+  return o;
+}
+
+S = load(); index();
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
 // ---------- budget periods ----------
 // Period "2026-10" starts on its start day in October and ends the day before the next period starts.
-// The start day is S.startDay unless a period has its own (e.g. salary came a day early).
+function monthLabel(k) { const [y, m] = k.split('-'); return MONTHS[+m - 1] + ' ' + y; }
+function shiftMonth(k, d) {
+  let [y, m] = k.split('-').map(Number); m += d;
+  while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; }
+  return y + '-' + pad(m);
+}
 const daysIn = (y, m) => new Date(y, m, 0).getDate();
-function startDay(k) { const m = S.months[k]; return m && m.startDay ? m.startDay : (S.startDay || 1); }
+function startDay(k) { const b = S.budgets[k]; return b && b.startDay ? b.startDay : (S.startDay || 1); }
 function periodStart(k) { const [y, m] = k.split('-').map(Number); return k + '-' + pad(Math.min(startDay(k), daysIn(y, m))); }
 function periodEnd(k) { const d = new Date(periodStart(shiftMonth(k, 1)) + 'T12:00'); d.setDate(d.getDate() - 1); return iso(d); }
 function periodOf(date) { const k = date.slice(0, 7); return date < periodStart(k) ? shiftMonth(k, -1) : k; }
@@ -225,84 +432,72 @@ function periodRange(k) {
   const a = periodStart(k), b = periodEnd(k);
   return +a.slice(8) + ' ' + MON_SHORT[+a.slice(5, 7) - 1] + ' – ' + +b.slice(8) + ' ' + MON_SHORT[+b.slice(5, 7) - 1] + ' ' + b.slice(0, 4);
 }
-const customPeriods = () => (S.startDay || 1) !== 1 || Object.values(S.months).some(m => m.startDay);
-// after a boundary changes, move dated operations into the period they now belong to
-function rebucket() {
-  let moved = 0;
-  for (const k of Object.keys(S.months)) {
-    const m = S.months[k];
-    m.tx = m.tx.filter(t => {
-      const p = t.date ? periodOf(t.date) : k;
-      if (p === k) return true;
-      ensureMonth(p).tx.push(t); moved++; return false;
-    });
-  }
-  return moved;
+// limits are inherited from the nearest earlier period until edited (copy on write)
+function bget(k) {
+  if (S.budgets[k]) return S.budgets[k];
+  const keys = Object.keys(S.budgets).sort();
+  const src = keys.filter(x => x < k).pop() || keys.find(x => x > k);
+  return {limits: src ? S.budgets[src].limits : {}, income: null, inherited: true};
 }
+function bmut(k) { if (!S.budgets[k]) S.budgets[k] = {limits: Object.assign({}, bget(k).limits), income: null}; return S.budgets[k]; }
 function setDefaultStartDay(n) {
   // past periods keep their boundaries; the current and future ones switch to the new day
-  const now = periodOf(today());
-  for (const k in S.months) if (k < now && !S.months[k].startDay) S.months[k].startDay = S.startDay || 1;
-  S.startDay = n;
-  const moved = rebucket();
-  cur = periodOf(today()); save(); render();
-  toast('Месяц начинается с ' + n + ' числа' + (moved ? ` · перенесено операций: ${moved}` : ''));
+  const now = periodOf(today()), old = S.startDay || 1;
+  let firstDate = null;
+  for (const t of S.tx) if (!firstDate || t.date < firstDate) firstDate = t.date;
+  for (let k = firstDate ? periodOf(firstDate) : now; k < now; k = shiftMonth(k, 1)) { const b = bmut(k); if (!b.startDay) b.startDay = old; }
+  S.startDay = n; cur = periodOf(today()); save(); render();
+  toast('Месяц начинается с ' + n + ' числа');
 }
 function setPeriodStartDay(n) {
-  const m = curMonth();
-  if (n) m.startDay = n; else delete m.startDay;
-  const moved = rebucket(); save(); render();
-  toast('Период: ' + periodRange(cur) + (moved ? ` · перенесено операций: ${moved}` : ''));
-}
-
-// ---------- ui state ----------
-let cur = periodOf(today());
-let tab = 'overview';
-let txFilter = 'all';
-let imp = null;
-
-// ---------- months ----------
-function monthLabel(k) { const [y, m] = k.split('-'); return MONTHS[+m - 1] + ' ' + y; }
-function shiftMonth(k, d) {
-  let [y, m] = k.split('-').map(Number); m += d;
-  while (m < 1) { m += 12; y--; } while (m > 12) { m -= 12; y++; }
-  return y + '-' + pad(m);
-}
-function sourceMonth(k) {
-  const keys = Object.keys(S.months).sort();
-  return keys.filter(x => x < k).pop() || keys.find(x => x > k) || null;
-}
-function ensureMonth(k) {
-  if (!S.months[k]) {
-    const src = sourceMonth(k), m = src ? S.months[src] : null;
-    S.months[k] = {income: m ? m.income : null, cats: m ? JSON.parse(JSON.stringify(m.cats)) : [], tx: []};
-  }
-  return S.months[k];
+  const b = bmut(cur);
+  if (n) b.startDay = n; else delete b.startDay;
+  save(); render(); toast('Период: ' + periodRange(cur));
 }
 
 // ---------- calculations ----------
-function findCat(m, name) {
-  const n = norm(name); if (!n) return null;
-  const c = m.cats.find(c => norm(c.name) === n); if (c) return c;
-  const a = S.aliases[n];
-  return a ? m.cats.find(c => norm(c.name) === norm(a)) || null : null;
-}
-function catLimit(c) { return c.subs && c.subs.length ? c.subs.reduce((s, x) => s + num(x.limit), 0) : num(c.limit); }
-function calc(m) {
-  const per = new Map(m.cats.map(c => [c.id, 0]));
-  let incomeTx = 0; const un = [];
-  for (const t of m.tx) {
-    const c = findCat(m, t.cat);
-    if (c) per.set(c.id, per.get(c.id) - t.amount);
-    else if (t.amount > 0) incomeTx += t.amount;
-    else un.push(t);
+function balances() {
+  const m = new Map(S.accounts.map(a => [a.id, num(a.initial)]));
+  for (const t of S.tx) {
+    if (t.type === 'expense') m.set(t.acc, (m.get(t.acc) || 0) - t.amount);
+    else if (t.type === 'income') m.set(t.acc, (m.get(t.acc) || 0) + t.amount);
+    else { m.set(t.acc, (m.get(t.acc) || 0) - t.amount); m.set(t.to, (m.get(t.to) || 0) + (t.toAmount ?? t.amount)); }
   }
-  const plan = m.cats.reduce((s, c) => s + catLimit(c), 0);
-  const unSum = un.reduce((s, t) => s - t.amount, 0);
-  const spent = [...per.values()].reduce((a, b) => a + b, 0) + unSum;
-  const auto = m.income == null || m.income === '';
-  const income = auto ? incomeTx : num(m.income);
-  return {per, incomeTx, un, unSum, plan, spent, income, auto, free: income - plan, left: income - spent};
+  return m;
+}
+function totalBalance(bal = balances()) { return S.accounts.filter(a => a.kind !== 'debt').reduce((s, a) => s + (bal.get(a.id) || 0), 0); }
+// signed effect of an operation: on one account, or on "my money" overall (transfers count only to/from debt accounts)
+function effect(t, accId) {
+  if (t.type === 'expense') return -t.amount;
+  if (t.type === 'income') return t.amount;
+  if (accId) return t.acc === accId ? -t.amount : t.to === accId ? (t.toAmount ?? t.amount) : 0;
+  const to = ACC.get(t.to), fr = ACC.get(t.acc);
+  if (to && to.kind === 'debt' && !(fr && fr.kind === 'debt')) return -t.amount;
+  if (fr && fr.kind === 'debt' && !(to && to.kind === 'debt')) return t.toAmount ?? t.amount;
+  return null;
+}
+function catLimit(L, c) { return num(L[c.id]) + c.subs.reduce((s, x) => s + num(L[x.id]), 0); }
+function budgetCalc(k) {
+  const a = periodStart(k), b = periodEnd(k), B = bget(k), L = B.limits || {};
+  const cat = new Map(), sub = new Map(), uncList = [];
+  let incomeTx = 0, unc = 0;
+  const add = (cid, sid, v) => { cat.set(cid, (cat.get(cid) || 0) + v); const key = sid || cid + ':own'; sub.set(key, (sub.get(key) || 0) + v); };
+  for (const t of S.tx) {
+    if (t.date < a || t.date > b) continue;
+    if (t.type === 'expense') { if (CAT.has(t.cat)) add(t.cat, SUB.has(t.sub) ? t.sub : '', t.amount); else { unc += t.amount; uncList.push(t); } }
+    else if (t.type === 'income') incomeTx += t.amount;
+    else {
+      // transfers to an account linked to a budget category (debt, pension...) count as spending in it
+      const to = ACC.get(t.to), fr = ACC.get(t.acc);
+      if (to && CAT.has(to.budgetCat) && !(fr && fr.budgetCat)) add(to.budgetCat, '', t.amount);
+      else if (fr && CAT.has(fr.budgetCat) && !(to && to.budgetCat)) add(fr.budgetCat, '', -(t.toAmount ?? t.amount));
+    }
+  }
+  const plan = S.cats.filter(c => c.type === 'expense').reduce((s, c) => s + catLimit(L, c), 0);
+  const spent = [...cat.values()].reduce((s, v) => s + v, 0) + unc;
+  const auto = B.income == null || B.income === '';
+  const income = auto ? incomeTx : num(B.income);
+  return {a, b, L, cat, sub, unc, uncList, plan, spent, income, incomeTx, auto, free: income - plan, left: income - spent};
 }
 function status(limit, spent) {
   if (limit <= 0) return spent > 0.005 ? ['Вне плана', 'warn'] : ['Нет лимита', 'muted'];
@@ -311,279 +506,494 @@ function status(limit, spent) {
   if (spent / limit >= 0.85) return ['Почти всё', 'warn'];
   return ['В норме', 'ok'];
 }
-function needBackup() {
-  const hasTx = Object.values(S.months).some(m => m.tx.length);
-  return hasTx && (!S.lastBackup || Date.now() - S.lastBackup > 14 * 864e5);
-}
+function needBackup() { return S.tx.length > 0 && (!S.lastBackup || Date.now() - S.lastBackup > 14 * 864e5); }
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 
+// ---------- ui state ----------
+let cur = periodOf(today());
+let tab = 'home', sub = '';
+let homeAcc = '', homeAll = true, homeQ = '', searchOn = false, homeLimit = 200;
+let anaAcc = '', anaAll = false, anaType = 'expense', anaOff = new Set(), anaOpen = new Set();
+let budMode = 'overview', catType = 'expense';
+let imp = null, A = null;
+
+// ---------- shared pieces ----------
+const icon = (e, c, cls = '') => `<span class="ic ${cls}" style="--c:${c || '#64748b'}">${esc(e || '🏷️')}</span>`;
+function periodBar(kind) {
+  const all = kind === 'home' ? homeAll : kind === 'ana' ? anaAll : false;
+  const chip = all ? 'Всё время' : `${monthLabel(cur)}<small>${periodRange(cur)}</small>`;
+  return `<div class="pnav">${all ? '' : '<button class="pbtn" data-act="pprev" aria-label="Предыдущий период">‹</button>'}
+    <button class="pchip" data-act="pmode" data-k="${kind}">${chip}</button>
+    ${all ? '' : '<button class="pbtn" data-act="pnext" aria-label="Следующий период">›</button>'}</div>`;
+}
+function accSelect(attr, sel, withAll) {
+  return (withAll ? `<option value="">Все счета</option>` : '') +
+    S.accounts.map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${esc(a.name)}${a.kind === 'debt' ? ' (долг)' : ''}</option>`).join('');
+}
+function accChip(attr, sel, withAll, balMap) {
+  const a = ACC.get(sel), bal = balMap || balances();
+  const name = a ? a.name : 'Все счета', amt = a ? bal.get(a.id) || 0 : totalBalance(bal);
+  return `<label class="selchip">${a ? icon(a.icon, a.color, 'round sm') : icon('💼', '#64748b', 'round sm')}
+    <span style="min-width:0"><b>${esc(name)}</b><small>${money(amt)}</small></span>
+    <select ${attr} aria-label="Счёт">${accSelect(attr, sel, withAll)}</select></label>`;
+}
+function fmtDay(d) {
+  const dt = new Date(d + 'T12:00'), t = today();
+  const y = new Date(); y.setDate(y.getDate() - 1);
+  const rel = d === t ? ' — Сегодня' : d === iso(y) ? ' — Вчера' : '';
+  return WD[dt.getDay()] + ', ' + dt.getDate() + ' ' + MONTHS_GEN[dt.getMonth()] + (d.slice(0, 4) !== t.slice(0, 4) ? ' ' + d.slice(0, 4) : '') + rel;
+}
+function txView(t, accId) {
+  if (t.type === 'transfer') {
+    const debt = isDebtTx(t), e = effect(t, accId);
+    return {ic: debt ? '🤝' : '⇄', color: debt ? '#a855f7' : '#3b82f6', title: accName(t.acc) + ' → ' + accName(t.to), subt: t.note || (debt ? 'Долг' : 'Перевод'),
+      amt: e, shown: e == null ? money(t.amount) : signed(e), cls: e == null ? 'muted' : e > 0 ? 'inc' : ''};
+  }
+  const c = CAT.get(t.cat), s = SUB.get(t.sub), e = effect(t);
+  return {ic: (s && s.icon) || (c && c.icon) || '❔', color: (s && s.color) || (c && c.color) || '#64748b',
+    title: s ? s.name : c ? c.name : 'Без категории', subt: t.note || (s && c ? c.name : ''),
+    amt: e, shown: signed(e), cls: e > 0 ? 'inc' : ''};
+}
+const sortTx = list => [...list].sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+function txList(list, accId, limit) {
+  const sorted = sortTx(list), shown = limit ? sorted.slice(0, limit) : sorted;
+  const sums = new Map();
+  for (const t of sorted) { const e = effect(t, accId); if (e != null) sums.set(t.date, (sums.get(t.date) || 0) + e); }
+  let h = '', last = null;
+  for (const t of shown) {
+    if (t.date !== last) { h += `<div class="dhead"><span>${fmtDay(t.date)}</span><span class="num">${signed(sums.get(t.date) || 0)}</span></div>`; last = t.date; }
+    const v = txView(t, accId);
+    h += `<button class="tx" data-act="edit" data-id="${t.id}">${icon(v.ic, v.color)}
+      <span class="t"><b>${esc(v.title)}</b>${v.subt ? `<small>${esc(v.subt)}</small>` : ''}</span>
+      <span class="amt num ${v.cls}">${v.shown}</span></button>`;
+  }
+  if (limit && sorted.length > limit) h += `<button class="more" data-act="showMore">Показать ещё (${sorted.length - limit})</button>`;
+  return h;
+}
+function matchQ(t, q) {
+  const v = txView(t);
+  return [v.title, v.subt, t.note, (CAT.get(t.cat) || {}).name, String(Math.abs(t.amount))].some(x => norm(x).includes(q));
+}
+
 // ---------- views ----------
 function render() {
+  index();
   document.querySelectorAll('.tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === tab));
-  const empty = !Object.keys(S.months).length;
-  $('#top').innerHTML = tab === 'settings' || empty
-    ? `<div class="mtitle">${tab === 'settings' ? 'Ещё' : 'Бюджет'}</div>`
-    : `<button class="icon" data-act="prev" aria-label="Предыдущий месяц">‹</button><div class="mtitle">${monthLabel(cur)}${customPeriods() ? `<small>${periodRange(cur)}</small>` : ''}</div><button class="icon" data-act="next" aria-label="Следующий месяц">›</button>`;
-  $('#view').innerHTML = tab === 'settings' ? vSettings() : empty ? vWelcome() : ({overview: vOverview, plan: vPlan, tx: vTx})[tab]();
+  const empty = !S.accounts.length && !S.tx.length;
+  $('#fab').hidden = empty || tab === 'more';
+  $('#view').innerHTML = empty && tab !== 'more' ? vWelcome()
+    : ({home: vHome, accounts: vAccounts, analytics: vAnalytics, budget: vBudget, more: sub === 'cats' ? vCats : vMore})[tab]();
 }
 
 function vWelcome() {
-  return `<div class="empty">
-    <img class="logo" src="icon-192.png" alt="">
-    <h2>Планирование бюджета</h2>
-    <p>Данные хранятся только на этом устройстве.</p>
-  </div>
+  return `<div class="hdr"><h1>Бюджет</h1></div>
+  <div class="empty"><img class="logo" src="icon-192.png" alt=""><h2>Учёт и планирование</h2><p>Данные хранятся только на этом устройстве.</p></div>
   <button class="btn wide" data-act="restore">Восстановить из резервной копии</button>
+  <button class="btn ghost wide" data-act="import">Перенести всё из Qalta (CSV)</button>
   <button class="btn ghost wide" data-act="starter">Начать с типовых категорий</button>
-  <button class="btn ghost wide" data-act="blankStart">Начать с нуля</button>
   ${installBanner()}`;
 }
-
-function noMonth() {
-  const src = sourceMonth(cur);
-  return `<div class="empty"><p>Плана на ${monthLabel(cur).toLowerCase()} пока нет.</p>
-    <button class="btn" data-act="createMonth">${src ? 'Создать — копия плана за ' + monthLabel(src).toLowerCase() : 'Создать план'}</button></div>`;
-}
-
 function installBanner() {
   if (!isIOS || standalone || S.hideInstall) return '';
-  return `<div class="banner"><b>Установите на экран «Домой»</b><br>
-    В Safari нажмите «Поделиться» → «На экран „Домой“» и пользуйтесь только с иконки:
-    у приложения с иконки и у вкладки Safari разные данные.
-    <div class="row"><button class="btn small ghost" data-act="hideInstall">Понятно</button></div></div>`;
+  return `<div class="banner"><b>Установите на экран «Домой»</b><br>В Safari: «Поделиться» → «На экран „Домой“». Пользуйтесь только с иконки:
+    у приложения с иконки и у вкладки Safari разные данные.<div class="row"><button class="btn small ghost" data-act="hideInstall">Понятно</button></div></div>`;
 }
 
-function vOverview() {
-  const m = S.months[cur]; if (!m) return noMonth();
-  const r = calc(m);
-  const pct = r.plan > 0 ? r.spent / r.plan : 0;
-  const [, cls] = status(r.plan, r.spent);
-  let h = installBanner();
-  if (needBackup()) h += `<div class="banner">${S.lastBackup ? 'Резервная копия не делалась больше двух недель.' : 'Резервной копии ещё нет.'}
-    Если удалить иконку приложения, данные пропадут.
-    <div class="row"><button class="btn small" data-act="backup">Сделать копию</button></div></div>`;
-  h += `<section class="card hero">
-    <div class="lbl">Текущий остаток (доход − потрачено)</div>
-    <div class="big ${r.left < 0 ? 'neg' : ''}">${money(r.left)}</div>
-    <div class="bar"><i class="${cls}" style="width:${Math.min(100, pct * 100)}%"></i></div>
-    <div class="row small" style="margin-top:6px"><span>Потрачено ${money(r.spent)}</span><span>${Math.round(pct * 100)}% плана</span></div>
-  </section>
-  <div class="grid">
-    <button class="card stat" data-act="editIncome"><div class="lbl">Доход</div><div class="val">${money(r.income)}</div><div class="sub">${r.auto ? 'из операций · изменить' : 'задан вручную · изменить'}</div></button>
-    <div class="card stat"><div class="lbl">План расходов</div><div class="val">${money(r.plan)}</div><div class="sub">${m.cats.length} категорий</div></div>
-    <div class="card stat"><div class="lbl">Свободные деньги</div><div class="val ${r.free < 0 ? 'neg' : ''}">${money(r.free)}</div><div class="sub">доход − план</div></div>
-    <div class="card stat"><div class="lbl">Осталось по плану</div><div class="val ${r.plan - r.spent < 0 ? 'neg' : ''}">${money(r.plan - r.spent)}</div><div class="sub">план − потрачено</div></div>
-  </div>`;
-  if (r.un.length) h += `<button class="alert" data-act="showUn">⚠ Вне категорий плана: ${r.un.length} ${plural(r.un.length, 'операция', 'операции', 'операций')} на ${money(r.unSum)} — разобрать</button>`;
-  h += `<h3>Категории</h3>`;
-  if (!m.cats.length) h += `<div class="card muted">Категорий нет. Добавьте их во вкладке «План».</div>`;
-  for (const c of m.cats) {
-    const lim = catLimit(c), sp = r.per.get(c.id) || 0;
-    const [st, sc] = status(lim, sp);
-    const w = lim > 0 ? Math.min(100, sp / lim * 100) : (sp > 0 ? 100 : 0);
-    h += `<button class="cat" data-act="cat" data-id="${c.id}">
-      <div class="row1"><span class="cname">${esc(c.name)}</span><span class="chip ${sc}">${st}</span></div>
-      <div class="bar"><i class="${sc}" style="width:${w}%"></i></div>
-      <div class="row2"><span>${money(sp)} из ${money(lim)}</span><span class="${lim - sp < -0.005 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div>
-    </button>`;
+function vHome() {
+  if (homeAcc && !ACC.has(homeAcc)) homeAcc = '';
+  const bal = balances();
+  const [a, b] = homeAll ? ['0000', '9999'] : [periodStart(cur), periodEnd(cur)];
+  let list = S.tx.filter(t => t.date >= a && t.date <= b && (!homeAcc || t.acc === homeAcc || t.to === homeAcc));
+  const q = norm(homeQ); if (q) list = list.filter(t => matchQ(t, q));
+  let inc = 0, exp = 0;
+  for (const t of list) { const e = effect(t, homeAcc); if (e > 0) inc += e; else if (e < 0) exp -= e; }
+  const big = homeAll && !q ? (homeAcc ? bal.get(homeAcc) || 0 : totalBalance(bal)) : inc - exp;
+  let h = `<div class="hdr">${accChip('data-homeacc', homeAcc, true, bal)}
+    <div class="hbtns"><button class="ibtn ${searchOn ? 'on' : ''}" data-act="search" aria-label="Поиск"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button></div></div>
+    ${searchOn ? `<div class="search"><input type="search" data-search value="${esc(homeQ)}" placeholder="Поиск по заметке, категории, сумме"></div>` : ''}
+    ${needBackup() ? `<div class="banner">Резервной копии ${S.lastBackup ? 'не было больше двух недель' : 'ещё нет'}. Если удалить иконку приложения, данные пропадут.
+      <div class="row"><button class="btn small" data-act="backup">Сделать копию</button></div></div>` : ''}
+    ${installBanner()}
+    <div class="total"><div class="lbl">${q ? 'Найдено' : homeAll ? (homeAcc ? 'Остаток на счёте' : 'Всего на счетах') : 'Итог за период'}</div>
+      <div class="big num ${big < 0 ? 'neg' : ''}">${money(big)}</div>
+      <div class="flows num"><span class="inc">↙ ${money(inc)}</span><span class="exp">↗ ${money(exp)}</span></div></div>
+    ${periodBar('home')}
+    <div id="homeList">${list.length ? txList(list, homeAcc, homeLimit) : '<div class="empty"><p>Операций нет</p></div>'}</div>`;
+  return h;
+}
+
+function vAccounts() {
+  const bal = balances();
+  const row = a => `<div class="arow"><button data-act="openAcc" data-id="${a.id}">${icon(a.icon, a.color, 'round')}<span class="nm">${esc(a.name)}</span>
+    <span class="bal num ${(bal.get(a.id) || 0) < 0 ? 'neg' : ''}">${money(bal.get(a.id) || 0)}</span></button>
+    <button class="pen" data-act="editAcc" data-id="${a.id}" aria-label="Изменить">${ICON_PEN}</button></div>`;
+  const own = S.accounts.filter(a => a.kind !== 'debt'), debts = S.accounts.filter(a => a.kind === 'debt');
+  return `<div class="hdr"><h1>Счета</h1><div class="hbtns"><button class="ibtn" data-act="newAcc" aria-label="Новый счёт">+</button></div></div>
+    <div class="total"><div class="lbl">Всего на счетах</div><div class="big num">${money(totalBalance(bal))}</div></div>
+    ${own.map(row).join('')}
+    ${debts.length ? `<h3>Долги</h3>${debts.map(row).join('')}<p class="hint">Положительный остаток — должны вам, отрицательный — должны вы.</p>` : ''}
+    <button class="btn ghost wide" style="margin-top:12px" data-act="newAcc">+ Новый счёт</button>`;
+}
+
+function anaCalc(a, b) {
+  const cats = new Map();
+  const add = (cid, sid, v) => {
+    const g = cats.get(cid) || {total: 0, subs: new Map()}; g.total += v;
+    const k = sid || 'own'; g.subs.set(k, (g.subs.get(k) || 0) + v); cats.set(cid, g);
+  };
+  for (const t of S.tx) {
+    if (t.date < a || t.date > b) continue;
+    if (t.type === anaType) {
+      if (anaAcc && t.acc !== anaAcc) continue;
+      add(CAT.has(t.cat) ? t.cat : 'none', SUB.has(t.sub) ? t.sub : '', t.amount);
+    } else if (t.type === 'transfer' && anaType === 'expense') {
+      if (anaAcc && t.acc !== anaAcc) continue;
+      const to = ACC.get(t.to);
+      if (to && CAT.has(to.budgetCat)) add(to.budgetCat, '', t.amount);
+      else if (to && to.kind === 'debt') add('debt', '', t.amount);
+    }
+  }
+  return [...cats].filter(([, g]) => Math.abs(g.total) > 0.004).sort((x, y) => y[1].total - x[1].total);
+}
+const catInfo = id => id === 'none' ? {name: 'Без категории', icon: '❔', color: '#64748b'} : id === 'debt' ? {name: 'Долги', icon: '🤝', color: '#a855f7'} : CAT.get(id);
+function arcPath(r0, r1, a0, a1) {
+  const p = (r, a) => (150 + r * Math.cos(a)).toFixed(2) + ' ' + (150 + r * Math.sin(a)).toFixed(2);
+  const large = a1 - a0 > Math.PI ? 1 : 0;
+  return `M${p(r1, a0)}A${r1} ${r1} 0 ${large} 1 ${p(r1, a1)}L${p(r0, a1)}A${r0} ${r0} 0 ${large} 0 ${p(r0, a0)}Z`;
+}
+function donut(rows, total) {
+  let svg = `<svg class="donut" viewBox="0 0 300 300" role="img" aria-label="Диаграмма по категориям">`;
+  if (total > 0) {
+    let ang = -Math.PI / 2;
+    const gap = rows.length > 1 ? 0.012 : 0;
+    for (const [id, g] of rows) {
+      if (anaOff.has(id) || g.total <= 0) continue;
+      const c = catInfo(id), span = Math.min(g.total / total * Math.PI * 2, Math.PI * 2 - 0.0001);
+      svg += `<path d="${arcPath(68, 112, ang + gap, ang + span - gap)}" fill="${c.color}" fill-opacity=".75"/>`;
+      let sa = ang;
+      for (const [sid, v] of [...g.subs].sort((x, y) => y[1] - x[1])) {
+        if (v <= 0) continue;
+        const ss = span * v / g.total, s = SUB.get(sid);
+        svg += `<path d="${arcPath(118, 132, sa + gap, sa + ss - gap)}" fill="${s ? s.color : c.color}"/>`;
+        sa += ss;
+      }
+      ang += span;
+    }
+  } else svg += `<circle cx="150" cy="150" r="90" fill="none" stroke="var(--track)" stroke-width="44"/>`;
+  return svg + `<text x="150" y="140" text-anchor="middle" font-size="14" fill-opacity=".6">Итого</text>
+    <text x="150" y="168" text-anchor="middle" font-size="26" font-weight="700">${esc(money(total))}</text></svg>`;
+}
+function vAnalytics() {
+  if (anaAcc && !ACC.has(anaAcc)) anaAcc = '';
+  const [a, b] = anaAll ? ['0000', '9999'] : [periodStart(cur), periodEnd(cur)];
+  const rows = anaCalc(a, b);
+  const total = rows.filter(([id]) => !anaOff.has(id)).reduce((s, [, g]) => s + g.total, 0);
+  let h = `<div class="hdr">${accChip('data-anaacc', anaAcc, true)}</div>
+    <div class="seg"><button class="${anaType === 'income' ? 'on inc' : ''}" data-act="anaType" data-v="income">↙ Доход</button><button class="${anaType === 'expense' ? 'on exp' : ''}" data-act="anaType" data-v="expense">↗ Расход</button></div>
+    ${periodBar('ana')}${donut(rows, total)}`;
+  if (!rows.length) return h + `<div class="empty"><p>За этот период операций нет</p></div>`;
+  h += `<div class="anarow"><span class="nmb" style="flex:1;padding-left:6px;font-weight:600">Все категории</span><span class="num">${money(total)}</span>
+    <button class="chk ${anaOff.size ? '' : 'on'}" data-act="anaAll" aria-label="Все категории">✓</button></div>`;
+  for (const [id, g] of rows) {
+    const c = catInfo(id), off = anaOff.has(id);
+    h += `<div class="anarow ${off ? 'off' : ''}"><button class="nmb" data-act="anaOpen" data-id="${id}">${icon(c.icon, c.color, 'sm')}<span>${esc(c.name)}</span></button>
+      <span class="num">${money(g.total)}</span><button class="chk ${off ? '' : 'on'}" data-act="anaToggle" data-id="${id}" aria-label="Учитывать">✓</button></div>`;
+    if (anaOpen.has(id)) {
+      h += `<div class="subrows">${[...g.subs].sort((x, y) => y[1] - x[1]).map(([sid, v]) => {
+        const s = SUB.get(sid);
+        return `<div class="row"><span>${s ? esc(s.icon + ' ' + s.name) : '<span class="muted">Без подкатегории</span>'}</span><span class="num small">${money(v)} · ${total ? Math.round(v / total * 100) : 0}%</span></div>`;
+      }).join('')}</div>`;
+    }
   }
   return h;
 }
 
+function vBudget() {
+  return `<div class="hdr"><h1>Бюджет</h1></div>${periodBar('budget')}
+    <div class="seg"><button class="${budMode === 'overview' ? 'on' : ''}" data-act="budMode" data-v="overview">Обзор</button><button class="${budMode === 'plan' ? 'on' : ''}" data-act="budMode" data-v="plan">План</button></div>
+    ${budMode === 'plan' ? vPlan() : vOverview()}`;
+}
+function vOverview() {
+  const r = budgetCalc(cur), pct = r.plan > 0 ? r.spent / r.plan : 0, [, cls] = status(r.plan, r.spent);
+  let h = `<section class="card hero"><div class="lbl">Остаток (доход − потрачено)</div>
+    <div class="big num ${r.left < 0 ? 'neg' : ''}">${money(r.left)}</div>
+    <div class="bar"><i class="${cls}" style="width:${Math.min(100, pct * 100)}%"></i></div>
+    <div class="row small num" style="margin-top:6px"><span>Потрачено ${money(r.spent)}</span><span>${Math.round(pct * 100)}% плана</span></div></section>
+  <div class="grid">
+    <button class="card stat" data-act="editIncome"><div class="lbl">Доход</div><div class="val num">${money(r.income)}</div><div class="sub">${r.auto ? 'из операций' : 'задан вручную'} · изменить</div></button>
+    <div class="card stat"><div class="lbl">План расходов</div><div class="val num">${money(r.plan)}</div></div>
+    <div class="card stat"><div class="lbl">Свободные деньги</div><div class="val num ${r.free < 0 ? 'neg' : ''}">${money(r.free)}</div><div class="sub">доход − план</div></div>
+    <div class="card stat"><div class="lbl">Осталось по плану</div><div class="val num ${r.plan - r.spent < 0 ? 'neg' : ''}">${money(r.plan - r.spent)}</div><div class="sub">план − потрачено</div></div>
+  </div>`;
+  if (r.uncList.length) h += `<button class="alert" data-act="showUnc">⚠ Без категории: ${r.uncList.length} на ${money(r.unc)} — разобрать</button>`;
+  h += `<h3>Категории</h3>`;
+  for (const c of S.cats.filter(c => c.type === 'expense')) {
+    const lim = catLimit(r.L, c), sp = r.cat.get(c.id) || 0;
+    if (lim <= 0 && Math.abs(sp) < 0.005) continue;
+    const [st, sc] = status(lim, sp), w = lim > 0 ? Math.min(100, sp / lim * 100) : (sp > 0 ? 100 : 0);
+    h += `<button class="cat" data-act="budCat" data-id="${c.id}"><div class="r1">${icon(c.icon, c.color, 'sm')}<b>${esc(c.name)}</b><span class="chipst ${sc}">${st}</span></div>
+      <div class="bar"><i class="${sc}" style="width:${Math.max(0, w)}%"></i></div>
+      <div class="r2 num"><span>${money(sp)} из ${money(lim)}</span><span class="${lim - sp < -0.005 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div></button>`;
+  }
+  const hidden = S.cats.filter(c => c.type === 'expense' && catLimit(r.L, c) <= 0 && !(r.cat.get(c.id))).length;
+  if (hidden) h += `<p class="hint" style="text-align:center">Категорий без лимита и трат: ${hidden}. Лимиты задаются во вкладке «План».</p>`;
+  return h;
+}
 function vPlan() {
-  const m = S.months[cur]; if (!m) return noMonth();
-  const r = calc(m);
+  const r = budgetCalc(cur), B = bget(cur), L = r.L;
   const days = Array.from({length: 31}, (_, i) => i + 1);
   let h = `<section class="card">
     <div class="row"><span class="muted">Период</span><b>${periodRange(cur)}</b></div>
     <label>Начало этого периода<select data-pstart>
       <option value="">как в настройках (${S.startDay || 1} число)</option>
-      ${days.map(d => `<option value="${d}" ${m.startDay === d ? 'selected' : ''}>${d} ${MONTHS_GEN[+cur.slice(5) - 1]}</option>`).join('')}
+      ${days.map(d => `<option value="${d}" ${(S.budgets[cur] || {}).startDay === d ? 'selected' : ''}>${d} ${MONTHS_GEN[+cur.slice(5) - 1]}</option>`).join('')}
     </select></label>
-    <p class="hint">Например, зарплата пришла 19-го, а не 20-го: поставьте 19. Прошлый период тогда закончится 18-го, операции переедут сами.</p>
+    <p class="hint">Зарплата пришла раньше, например 19-го вместо 20-го? Поставьте 19 — прошлый период закончится 18-го.</p>
+    <label>Доход за месяц<input type="text" inputmode="decimal" data-income value="${B.income ?? ''}" placeholder="авто: ${nf.format(r.incomeTx)}"></label>
+    <p class="hint">Пусто — доход считается по поступлениям за период.</p>
   </section>
-  <section class="card">
-    <label style="margin:0">Доход за месяц<input type="text" inputmode="decimal" data-f="income" value="${m.income ?? ''}" placeholder="авто: ${nf.format(r.incomeTx)}"></label>
-    <p class="hint">Если оставить пустым, доход посчитается по поступлениям из операций.</p>
-  </section>
-  <div class="plansum" id="plansum">${planSum(m)}</div>`;
-  m.cats.forEach((c, i) => {
-    h += `<section class="card" data-cid="${c.id}">
-      <div class="pc-head"><input class="pc-name" data-f="cname" data-orig="${esc(c.name)}" value="${esc(c.name)}" aria-label="Название категории"><span class="pc-total" data-total>${money(catLimit(c))}</span></div>`;
-    if (c.subs.length) {
-      for (const s of c.subs) h += `<div class="srow" data-sid="${s.id}">
-        <input data-f="sname" value="${esc(s.name)}" aria-label="Подкатегория">
-        <input class="amt" type="text" inputmode="decimal" data-f="slimit" value="${s.limit || ''}" placeholder="0" aria-label="Лимит">
-        <button class="x" data-act="delSub" aria-label="Удалить подкатегорию">✕</button></div>`;
-    } else {
-      h += `<div class="srow"><span class="lbl">Лимит</span><input class="amt" type="text" inputmode="decimal" data-f="climit" value="${c.limit || ''}" placeholder="0" aria-label="Лимит"></div>`;
-    }
-    h += `<div class="pc-actions">
-      <button class="add" data-act="addSub">+ подкатегория</button>
-      ${i > 0 ? '<button data-act="moveUp" aria-label="Выше">↑</button>' : ''}
-      ${i < m.cats.length - 1 ? '<button data-act="moveDown" aria-label="Ниже">↓</button>' : ''}
-      <button class="del" data-act="delCat">Удалить</button></div></section>`;
-  });
-  h += `<button class="btn wide" data-act="addCat">+ Добавить категорию</button>`;
-  const prev = Object.keys(S.months).sort().filter(k => k < cur).pop();
-  if (prev) h += `<button class="btn ghost wide" data-act="copyPrev">Заменить план копией за ${monthLabel(prev).toLowerCase()}</button>`;
+  ${B.inherited ? `<p class="hint" style="margin:-4px 4px 10px">Лимиты взяты из прошлого периода. Как только вы что-то поменяете, у этого месяца появится свой план.</p>` : ''}
+  <div class="plansum" id="plansum">${planSum(cur)}</div>`;
+  for (const c of S.cats.filter(c => c.type === 'expense')) {
+    h += `<section class="card" data-cid="${c.id}"><div class="pc-head">${icon(c.icon, c.color, 'sm')}<b>${esc(c.name)}</b><span class="pc-total num" data-total>${money(catLimit(L, c))}</span></div>
+      <div class="srow"><span class="lbl muted">${c.subs.length ? 'Без подкатегории' : 'Лимит'}</span><input class="amt" type="text" inputmode="decimal" data-lim="${c.id}" value="${L[c.id] || ''}" placeholder="0"></div>
+      ${c.subs.map(s => `<div class="srow"><span class="lbl">${esc(s.icon)} ${esc(s.name)}</span><input class="amt" type="text" inputmode="decimal" data-lim="${s.id}" value="${L[s.id] || ''}" placeholder="0"></div>`).join('')}
+    </section>`;
+  }
+  h += `<button class="btn ghost wide" data-act="goCats">Изменить категории</button>`;
   return h;
 }
-function planSum(m) {
-  const r = calc(m);
-  return `<div><span class="muted">План</span><b>${money(r.plan)}</b></div>
-    <div><span class="muted">Доход</span><b>${money(r.income)}</b></div>
-    <div style="text-align:right"><span class="muted">Свободно</span><b class="${r.free < 0 ? 'neg' : ''}">${money(r.free)}</b></div>`;
+function planSum(k) {
+  const r = budgetCalc(k);
+  return `<div><span class="muted">План</span><b class="num">${money(r.plan)}</b></div><div><span class="muted">Доход</span><b class="num">${money(r.income)}</b></div>
+    <div style="text-align:right"><span class="muted">Свободно</span><b class="num ${r.free < 0 ? 'neg' : ''}">${money(r.free)}</b></div>`;
 }
 
-function vTx() {
-  const m = S.months[cur];
-  let h = `<div class="tools"><button class="btn" data-act="import">Импорт из Qalta</button><button class="btn ghost" data-act="addTx">+ Вручную</button></div>`;
-  if (!m) return h + noMonth();
-  const r = calc(m);
-  if (r.un.length) {
-    const groups = new Map();
-    for (const t of r.un) { const k = norm(t.cat); const g = groups.get(k) || {name: t.cat.trim(), n: 0, sum: 0}; g.n++; g.sum -= t.amount; groups.set(k, g); }
-    const opts = m.cats.map(c => `<option value="${esc(c.name)}">${esc(c.name)}</option>`).join('');
-    h += `<section class="card"><b>Не попали в план</b>
-      <p class="hint">Выберите категорию плана. Для названий из Qalta выбор запомнится и будет применяться при следующих импортах.</p>`;
-    for (const [k, g] of groups) h += `<div class="ungroup"><div class="nm"><b>${g.name ? esc(g.name) : 'Без категории'}</b><div class="small">${g.n} шт. · ${money(g.sum)}</div></div>
-      <select data-un="${esc(k)}"><option value="">Отнести к…</option>${opts}</select></div>`;
-    h += `</section>`;
-  }
-  h += `<select data-txfilter style="margin:0 0 4px">
-    <option value="all">Все операции (${m.tx.length})</option>
-    ${r.un.length ? `<option value="un" ${txFilter === 'un' ? 'selected' : ''}>Не попали в план (${r.un.length})</option>` : ''}
-    ${m.cats.map(c => `<option value="${c.id}" ${txFilter === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}
-  </select>`;
-  let list = m.tx;
-  if (txFilter === 'un') list = r.un;
-  else if (txFilter !== 'all') list = m.tx.filter(t => { const c = findCat(m, t.cat); return c && c.id === txFilter; });
-  if (!list.length) return h + `<div class="empty"><p>Операций нет. Импортируйте выгрузку из Qalta или добавьте вручную.</p></div>`;
-  h += txList(m, list);
-  return h;
-}
-function txList(m, list) {
-  const sorted = [...list].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-  let h = '', last = null, open = false;
-  for (const t of sorted) {
-    const d = t.date || '';
-    if (d !== last) {
-      if (open) h += '</div>';
-      h += `<div class="dhead">${d ? fmtDate(d) : 'Без даты'}</div><div class="txlist">`; open = true; last = d;
-    }
-    const c = findCat(m, t.cat);
-    const details = [t.sub, c && norm(c.name) !== norm(t.cat) ? 'Qalta: ' + t.cat : '', t.note].filter(Boolean).join(' · ');
-    h += `<button class="tx" data-act="tx" data-id="${t.id}"><div style="min-width:0"><b>${c ? esc(c.name) : `<span class="${t.amount < 0 ? 'flag' : ''}">${esc(t.cat || 'Без категории')}</span>`}</b>
-      ${details ? `<small>${esc(details)}</small>` : ''}</div>
-      <span class="amt ${t.amount > 0 ? 'pos' : ''}">${t.amount > 0 ? '+' : '−'}${money(Math.abs(t.amount))}</span></button>`;
-  }
-  return h + (open ? '</div>' : '');
-}
-const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
-function fmtDate(d) { const [y, m, dd] = d.split('-'); return +dd + ' ' + MONTHS_GEN[+m - 1] + ' ' + y; }
-function plural(n, a, b, c) { const k = n % 100, j = n % 10; return k > 10 && k < 20 ? c : j === 1 ? a : j >= 2 && j <= 4 ? b : c; }
-
-function vSettings() {
-  const aliases = Object.entries(S.aliases);
-  return `${installBanner()}
-  <section class="card"><b>Резервная копия</b>
-    <p class="hint">Последняя: ${S.lastBackup ? new Date(S.lastBackup).toLocaleString('ru-RU') : 'ещё не делалась'}.
-    Сохраните файл в «Файлы» / iCloud Drive или отправьте себе в мессенджер.</p>
-    <div class="btns"><button class="btn" data-act="backup">Сделать копию</button><button class="btn ghost" data-act="restore">Восстановить</button></div>
-  </section>
+function vMore() {
+  return `<div class="hdr"><h1>Ещё</h1></div>${installBanner()}
+  <div class="menu">
+    <button data-act="import">${icon('📥', '#0ea5e9', 'sm')}<span>Импорт из Qalta (CSV)</span><span class="go">›</span></button>
+    <button data-act="goCats">${icon('🗂️', '#a855f7', 'sm')}<span>Категории</span><span class="go">›</span></button>
+  </div>
+  <div class="menu">
+    <button data-act="backup">${icon('💾', '#22c55e', 'sm')}<span>Сделать резервную копию<br><small class="muted">последняя: ${S.lastBackup ? new Date(S.lastBackup).toLocaleDateString('ru-RU') : 'не делалась'}</small></span></button>
+    <button data-act="restore">${icon('♻️', '#14b8a6', 'sm')}<span>Восстановить из копии</span></button>
+  </div>
   <section class="card"><label style="margin:0">Бюджетный месяц начинается с числа<select data-startday>
       ${Array.from({length: 31}, (_, i) => i + 1).map(d => `<option value="${d}" ${(S.startDay || 1) === d ? 'selected' : ''}>${d}${d === 1 ? ' (календарный месяц)' : ''}</option>`).join('')}
     </select></label>
-    <p class="hint">Например, 20 — если зарплата приходит 20-го: тогда «Октябрь» — это 20 октября – 19 ноября.
-    Меняет текущий и будущие периоды, прошлые остаются как были. Для одного месяца дату можно сдвинуть во вкладке «План».</p>
+    <p class="hint">Например, 20 — если зарплата приходит 20-го: «Октябрь» — это 20 октября – 19 ноября. Меняет текущий и будущие периоды, прошлые остаются как были.</p>
+    <label>Валюта<input data-currency value="${esc(S.currency)}" placeholder="Br"></label>
   </section>
-  <section class="card"><label style="margin:0">Валюта<input data-f="currency" value="${esc(S.currency)}" placeholder="Br"></label></section>
-  ${aliases.length ? `<section class="card"><b>Соответствия категорий Qalta</b>
-    ${aliases.map(([k, v]) => `<div class="ungroup"><div class="nm small">«${esc(k)}» → <b style="color:var(--text)">${esc(v)}</b></div><button class="x" data-act="delAlias" data-k="${esc(k)}" aria-label="Удалить">✕</button></div>`).join('')}
-  </section>` : ''}
   <section class="card"><b>Как установить на iPhone</b>
-    <ol class="steps"><li>Откройте эту страницу в Safari.</li><li>Нажмите «Поделиться» (квадрат со стрелкой).</li><li>Выберите «На экран „Домой“».</li><li>Дальше открывайте приложение только с иконки — без интернета тоже работает.</li></ol>
-  </section>
-  <section class="card"><b>Опасная зона</b>
-    <p class="hint">Удаляет все месяцы, план и операции на этом устройстве.</p>
-    <div class="btns"><button class="btn danger" data-act="wipe">Удалить все данные</button></div>
-  </section>`;
+    <ol class="steps"><li>Откройте страницу в Safari.</li><li>«Поделиться» → «На экран „Домой“».</li><li>Открывайте приложение только с иконки — без интернета тоже работает.</li></ol></section>
+  <div class="btns" style="margin-bottom:20px"><button class="btn danger" data-act="wipe">Удалить все данные</button></div>`;
+}
+
+function vCats() {
+  const list = S.cats.filter(c => c.type === catType);
+  return `<div class="hdr"><button class="ibtn" data-act="back" aria-label="Назад">‹</button><h1 style="font-size:22px">Категории</h1>
+    <div class="hbtns"><button class="ibtn" data-act="newCat" aria-label="Новая категория">+</button></div></div>
+    <div class="seg"><button class="${catType === 'income' ? 'on' : ''}" data-act="catType" data-v="income">↙ Доход</button><button class="${catType === 'expense' ? 'on' : ''}" data-act="catType" data-v="expense">↗ Расход</button></div>
+    ${list.map((c, i) => `<div class="cgroup">
+      <button class="ci" data-act="editCat" data-id="${c.id}">${icon(c.icon, c.color)}<b>${esc(c.name)}</b><span class="pen">${ICON_PEN}</span></button>
+      ${c.subs.map(s => `<button class="ci sub" data-act="editSub" data-id="${s.id}">${icon(s.icon, s.color, 'sm')}<b>${esc(s.name)}</b><span class="pen">${ICON_PEN}</span></button>`).join('')}
+      <div class="acts"><button class="add" data-act="newSub" data-id="${c.id}">+ подкатегория</button>
+        ${i > 0 ? `<button data-act="catUp" data-id="${c.id}">↑ выше</button>` : ''}${i < list.length - 1 ? `<button data-act="catDown" data-id="${c.id}">↓ ниже</button>` : ''}</div>
+    </div>`).join('') || '<div class="empty"><p>Категорий пока нет</p></div>'}
+    <button class="btn ghost wide" data-act="newCat">+ Новая категория</button>`;
 }
 
 // ---------- sheets ----------
-function openSheet(html) { $('#sheetBody').innerHTML = html; $('#sheet').hidden = false; document.body.style.overflow = 'hidden'; }
-function closeSheet() { $('#sheet').hidden = true; document.body.style.overflow = ''; imp = null; }
+function openSheet(html) { $('#sheetBody').innerHTML = html; $('#sheet').hidden = false; document.body.style.overflow = 'hidden'; $('.sheet').scrollTop = 0; }
+function closeSheet() { $('#sheet').hidden = true; document.body.style.overflow = A ? 'hidden' : ''; imp = null; }
 $('#sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
 
-function openCat(id) {
-  const m = S.months[cur], c = m.cats.find(x => x.id === id); if (!c) return;
-  const r = calc(m), lim = catLimit(c), sp = r.per.get(id) || 0;
-  const list = m.tx.filter(t => { const x = findCat(m, t.cat); return x && x.id === id; });
-  let subsHtml = '';
-  if (c.subs.length) {
-    const {rows, extra} = subBreakdown(c, list);
-    subsHtml = `<h3>По подкатегориям</h3><div class="card" style="background:var(--bg)">${rows.map(s => {
-      const [, sc] = status(s.limit, s.spent);
-      const w = s.limit > 0 ? Math.min(100, s.spent / s.limit * 100) : (s.spent > 0 ? 100 : 0);
-      return `<div style="padding:5px 0"><div class="row"><span>${esc(s.name)}</span><span class="small">${money(s.spent)} / ${money(s.limit)}</span></div>
-        <div class="bar" style="height:5px;margin-top:4px"><i class="${sc}" style="width:${w}%"></i></div></div>`;
-    }).join('')}
-    ${[...extra].map(([n, v]) => `<div class="row" style="padding:5px 0"><span class="muted">${esc(n)} <small>(нет в плане)</small></span><span class="small">${money(v)}</span></div>`).join('')}</div>`;
-  }
-  openSheet(`<h2>${esc(c.name)}</h2>
-    <div class="row small"><span>Потрачено ${money(sp)} из ${money(lim)}</span><span class="${lim - sp < 0 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div>
-    ${subsHtml}
-    <h3>Операции</h3>${list.length ? txList(m, list) : '<p class="muted">Пока нет.</p>'}
-    <div class="btns"><button class="btn ghost" data-act="goPlan">Изменить план</button><button class="btn ghost" data-act="close">Закрыть</button></div>`);
+function iconPicker(cur) {
+  return `<input type="hidden" id="fIcon" value="${esc(cur)}">
+    <details><summary>Иконка: <span id="iconShow" style="font-size:22px">${esc(cur)}</span></summary>
+    <div class="emojis">${EMOJIS.map(e => `<button type="button" class="${e === cur ? 'on' : ''}" data-act="pickIcon" data-e="${e}">${e}</button>`).join('')}</div>
+    <label>Или свой эмодзи<input id="fIconCustom" maxlength="8" placeholder="например 🦄"></label></details>`;
+}
+function colorPicker(cur) {
+  return `<div class="colors">${PALETTE.map(c => `<label><input type="radio" name="fColor" value="${c}" ${c === cur ? 'checked' : ''}><span style="--c:${c}"></span></label>`).join('')}</div>`;
+}
+const pickedIcon = () => ($('#fIconCustom') && $('#fIconCustom').value.trim()) || $('#fIcon').value;
+const pickedColor = () => (document.querySelector('input[name=fColor]:checked') || {}).value;
+
+function sheetAccount(id) {
+  const a = id ? ACC.get(id) : {name: '', kind: 'regular', icon: '💳', color: PALETTE[(S.accounts.length * 5 + 3) % PALETTE.length], initial: 0, budgetCat: ''};
+  const used = id && S.tx.some(t => t.acc === id || t.to === id);
+  openSheet(`<h2>${id ? 'Счёт' : 'Новый счёт'}</h2>
+    <label>Название<input id="fName" value="${esc(a.name)}" placeholder="Например, Карта"></label>
+    <label>Тип</label>
+    <div class="seg" style="background:var(--card2)">${[['regular', 'Обычный'], ['savings', 'Накопления'], ['debt', 'Долг']].map(([v, l]) =>
+      `<label><input type="radio" name="fKind" value="${v}" ${a.kind === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
+    <label>Начальный остаток<input id="fInit" type="text" inputmode="decimal" value="${a.initial || ''}" placeholder="0"></label>
+    <p class="hint">Остаток на момент первой операции в приложении. При переносе всей истории из Qalta оставьте 0.</p>
+    <label>Переводы на этот счёт в бюджете считать как<select id="fBudCat"><option value="">— не учитывать —</option>
+      ${S.cats.filter(c => c.type === 'expense').map(c => `<option value="${c.id}" ${a.budgetCat === c.id ? 'selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
+    <p class="hint">Например, «Моя пенсия» → категория «Пенсия»: перевод 200 на этот счёт закроет лимит пенсии.</p>
+    ${iconPicker(a.icon)}${colorPicker(a.color)}
+    <div class="btns">${id ? `<button class="btn danger" data-act="delAcc" data-id="${id}" ${used ? 'data-used="1"' : ''}>Удалить</button>` : ''}
+      <button class="btn" data-act="saveAcc" data-id="${id || ''}">Сохранить</button></div>`);
+}
+function sheetCat(id, subId, parentId) {
+  const isSub = !!subId || !!parentId;
+  const c = id ? CAT.get(id) : null, s = subId ? SUB.get(subId) : null, parent = parentId ? CAT.get(parentId) : subId ? SUBCAT.get(subId) : null;
+  const item = c || s || {name: '', icon: parent ? parent.icon : '🏷️', color: PALETTE[(S.cats.length * 3) % PALETTE.length]};
+  openSheet(`<h2>${c ? 'Категория' : s ? 'Подкатегория' : parent ? 'Новая подкатегория' : 'Новая категория'}</h2>
+    ${parent ? `<p class="hint" style="margin-top:-6px">В категории «${esc(parent.name)}»</p>` : ''}
+    <label>Название<input id="fName" value="${esc(item.name)}"></label>
+    ${!isSub && !c ? `<label>Тип</label><div class="seg" style="background:var(--card2)">
+      <label><input type="radio" name="fCType" value="expense" ${catType === 'expense' ? 'checked' : ''}><span>Расход</span></label>
+      <label><input type="radio" name="fCType" value="income" ${catType === 'income' ? 'checked' : ''}><span>Доход</span></label></div>` : ''}
+    ${iconPicker(item.icon)}${colorPicker(item.color)}
+    <div class="btns">${c || s ? `<button class="btn danger" data-act="delCat" data-id="${c ? c.id : ''}" data-sid="${s ? s.id : ''}">Удалить</button>` : ''}
+      <button class="btn" data-act="saveCat" data-id="${c ? c.id : ''}" data-sid="${s ? s.id : ''}" data-parent="${parent && !s ? parent.id : ''}">Сохранить</button></div>`);
+  if (!item.name) setTimeout(() => $('#fName').focus(), 150);
+}
+function sheetBudCat(id) {
+  const c = CAT.get(id), r = budgetCalc(cur), lim = catLimit(r.L, c), sp = r.cat.get(id) || 0;
+  const list = S.tx.filter(t => t.date >= r.a && t.date <= r.b && (t.type === 'expense' && t.cat === id || t.type === 'transfer' && ((ACC.get(t.to) || {}).budgetCat === id || (ACC.get(t.acc) || {}).budgetCat === id)));
+  const rows = [{name: 'Без подкатегории', icon: '', key: id + ':own', lim: num(r.L[id])}].concat(c.subs.map(s => ({name: s.name, icon: s.icon, key: s.id, lim: num(r.L[s.id])})));
+  openSheet(`<h2>${esc(c.icon)} ${esc(c.name)}</h2>
+    <div class="row small num"><span>Потрачено ${money(sp)} из ${money(lim)}</span><span class="${lim - sp < 0 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div>
+    ${c.subs.length ? `<h3>По подкатегориям</h3><div class="card">${rows.filter(x => x.lim > 0 || r.sub.get(x.key)).map(x => {
+      const v = r.sub.get(x.key) || 0, [, sc] = status(x.lim, v), w = x.lim > 0 ? Math.min(100, v / x.lim * 100) : (v > 0 ? 100 : 0);
+      return `<div style="padding:5px 0"><div class="row"><span>${esc(x.icon)} ${esc(x.name)}</span><span class="small num">${money(v)} / ${money(x.lim)}</span></div>
+        <div class="bar" style="height:5px;margin-top:4px"><i class="${sc}" style="width:${Math.max(0, w)}%"></i></div></div>`;
+    }).join('') || '<span class="muted">Нет данных</span>'}</div>` : ''}
+    <h3>Операции</h3>${list.length ? txList(list, '') : '<p class="muted">Пока нет.</p>'}
+    <div class="btns"><button class="btn ghost" data-act="goPlan">Изменить лимиты</button><button class="btn ghost" data-act="close">Закрыть</button></div>`);
 }
 
-// actual spending per planned subcategory; an operation without a subcategory goes to the one named like the category
-function subBreakdown(c, list) {
-  const rows = c.subs.map(s => ({name: s.name, limit: num(s.limit), spent: 0}));
-  const extra = new Map();
-  for (const t of list) {
-    const row = rows.find(x => norm(x.name) === (norm(t.sub) || norm(c.name)));
-    if (row) row.spent -= t.amount;
-    else { const k = (t.sub || '').trim() || 'Без подкатегории'; extra.set(k, (extra.get(k) || 0) - t.amount); }
+// ---------- add / edit operation ----------
+function fmtExprNum(n) { return String(round2(n)).replace('.', ','); }
+function evalExpr(s) {
+  s = s.replace(/[+−×÷]+$/, '');
+  const toks = s.replace(/,/g, '.').match(/\d+\.?\d*|\.\d+|[+−×÷]/g) || [];
+  const vals = [], ops = [], prec = {'+': 1, '−': 1, '×': 2, '÷': 2};
+  const apply = () => { const b = vals.pop(), a = vals.pop(), o = ops.pop(); vals.push(o === '+' ? a + b : o === '−' ? a - b : o === '×' ? a * b : b ? a / b : 0); };
+  for (const t of toks) {
+    if (/[+−×÷]/.test(t)) { while (ops.length && prec[ops[ops.length - 1]] >= prec[t]) apply(); ops.push(t); }
+    else vals.push(parseFloat(t));
   }
-  return {rows, extra};
+  while (ops.length && vals.length > 1) apply();
+  return vals.length ? vals[0] : 0;
 }
-function subOpts(m, catName, sel) {
-  const c = findCat(m, catName), names = c ? c.subs.map(s => s.name) : [];
-  if (sel && !names.some(n => norm(n) === norm(sel))) names.push(sel);
-  return `<option value="">—</option>` + names.map(n => `<option value="${esc(n)}" ${norm(n) === norm(sel) ? 'selected' : ''}>${esc(n)}</option>`).join('');
+function openAdd(id) {
+  const t = id ? S.tx.find(x => x.id === id) : null;
+  const firstRegular = (S.accounts.find(a => a.id === (homeAcc || S.lastAcc) && a.kind !== 'debt') || S.accounts.find(a => a.kind !== 'debt') || S.accounts[0] || {}).id || '';
+  if (t) {
+    const debt = isDebtTx(t), out = debt && (ACC.get(t.to) || {}).kind === 'debt';
+    A = {id, type: t.type === 'transfer' ? (debt ? 'debt' : 'transfer') : t.type, expr: fmtExprNum(Math.abs(t.amount)), refund: t.type === 'expense' && t.amount < 0,
+      acc: debt && !out ? t.to : t.acc, to: debt && !out ? t.acc : t.to, dir: debt ? (out ? 'out' : 'in') : 'out',
+      date: t.date, time: t.time || '', note: t.note || '', cat: t.cat || '', sub: t.sub || '', q: ''};
+  } else {
+    A = {id: '', type: 'expense', expr: '0', refund: false, acc: firstRegular, to: '', dir: 'out', date: today(), time: nowTime(), note: '', cat: '', sub: '', q: ''};
+  }
+  if (!A.to) A.to = (S.accounts.find(a => a.id !== A.acc && (A.type === 'debt' ? a.kind === 'debt' : a.kind !== 'debt')) || {}).id || '';
+  document.body.style.overflow = 'hidden';
+  $('#add').hidden = false;
+  renderAdd();
 }
-
-function openTx(id) {
-  const m = id ? S.months[cur] : ensureMonth(cur);
-  const t = id ? m.tx.find(x => x.id === id) : {date: periodOf(today()) === cur ? today() : periodStart(cur), cat: '', amount: 0, note: ''};
-  if (!t) return;
-  const match = findCat(m, t.cat);
-  const opts = [`<option value="">Без категории</option>`]
-    .concat(t.cat && !match ? [`<option value="${esc(t.cat)}" selected>${esc(t.cat)} (из Qalta)</option>`] : [])
-    .concat(m.cats.map(c => `<option value="${esc(c.name)}" ${match && match.id === c.id ? 'selected' : ''}>${esc(c.name)}</option>`));
-  openSheet(`<h2>${id ? 'Операция' : 'Новая операция'}</h2>
-    <div class="seg"><label><input type="radio" name="kind" value="exp" ${t.amount <= 0 ? 'checked' : ''}><span>Расход</span></label>
-      <label><input type="radio" name="kind" value="inc" ${t.amount > 0 ? 'checked' : ''}><span>Доход</span></label></div>
-    <label>Сумма<input id="fAmt" type="text" inputmode="decimal" value="${t.amount ? Math.abs(t.amount) : ''}" placeholder="0"></label>
-    <label>Категория<select id="fCat">${opts.join('')}</select></label>
-    <label>Подкатегория<select id="fSub">${subOpts(m, t.cat, t.sub || '')}</select></label>
-    <label>Дата<input id="fDate" type="date" value="${t.date || ''}"></label>
-    <label>Заметка<input id="fNote" value="${esc(t.note)}"></label>
-    <div class="btns">${id ? `<button class="btn danger" data-act="delTx" data-id="${id}">Удалить</button>` : ''}<button class="btn" data-act="saveTx" data-id="${id || ''}">Сохранить</button></div>`);
-  if (!id) setTimeout(() => $('#fAmt').focus(), 100);
+function closeAdd() { $('#add').hidden = true; A = null; document.body.style.overflow = ''; }
+function addAmountHtml() {
+  const v = evalExpr(A.expr), hasOp = /[+−×÷]/.test(A.expr);
+  const color = A.type === 'income' ? 'var(--inc)' : A.type === 'expense' ? (A.refund ? 'var(--inc)' : 'var(--text)') : A.type === 'debt' ? '#bf5af2' : '#0a84ff';
+  return `<div class="expr">${hasOp ? esc(A.expr) : ''}</div><div class="val num" style="color:${color}">${esc(nf.format(round2(v)))} ${esc(S.currency)}</div>`;
+}
+function addCatsHtml() {
+  if (A.type !== 'expense' && A.type !== 'income') return '';
+  const cats = S.cats.filter(c => c.type === A.type), q = norm(A.q);
+  const btn = (act, id, ic, color, name, on, extra = '') => `<button data-act="${act}" data-id="${id}" ${extra} class="${on ? 'on' : ''}">${icon(ic, color)}<span class="n">${esc(name)}</span></button>`;
+  let h = `<div class="catpick"><input class="catq" type="search" data-catq value="${esc(A.q)}" placeholder="Поиск категории" style="background:var(--card2)">`;
+  if (q) {
+    const hits = [];
+    for (const c of cats) {
+      if (norm(c.name).includes(q)) hits.push(btn('pickCat', c.id, c.icon, c.color, c.name, A.cat === c.id && !A.sub));
+      for (const s of c.subs) if (norm(s.name).includes(q)) hits.push(btn('pickSub', s.id, s.icon, s.color, s.name, A.sub === s.id));
+    }
+    h += `<div class="strip">${hits.join('') || '<span class="small" style="padding:10px">Ничего не найдено</span>'}</div>`;
+  } else {
+    h += `<div class="strip">${btn('pickCat', '', '❔', '#64748b', 'Без категории', !A.cat)}${cats.map(c => btn('pickCat', c.id, c.icon, c.color, c.name, A.cat === c.id)).join('')}</div>`;
+    const c = CAT.get(A.cat);
+    if (c && c.subs.length) h += `<div class="strip subs">${btn('pickSub', '', c.icon, c.color, 'Вся категория', !A.sub)}${c.subs.map(s => btn('pickSub', s.id, s.icon, s.color, s.name, A.sub === s.id)).join('')}</div>`;
+  }
+  return h + `</div>`;
+}
+function renderAdd() {
+  const bal = balances();
+  const accOpt = (sel, filter) => S.accounts.filter(filter).map(a => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${esc(a.name)}</option>`).join('');
+  const accChipA = (field, sel, filter, label) => {
+    const a = ACC.get(sel);
+    return `<label class="chip grow">${a ? icon(a.icon, a.color, 'round') : icon('💼', '#64748b', 'round')}
+      <span style="min-width:0"><b>${a ? esc(a.name) : 'Выберите счёт'}</b><small>${label || (a ? money(bal.get(a.id) || 0) : '')}</small></span>
+      <select data-addf="${field}"><option value="">—</option>${accOpt(sel, filter)}</select></label>`;
+  };
+  const own = a => a.kind !== 'debt', debt = a => a.kind === 'debt';
+  const dLabel = A.date === today() ? 'Сегодня' : fmtDay(A.date).replace(/ — .*/, '');
+  let accRow;
+  if (A.type === 'transfer') accRow = accChipA('acc', A.acc, own, 'откуда') + `<span style="align-self:center">→</span>` + accChipA('to', A.to, own, 'куда');
+  else if (A.type === 'debt') accRow = accChipA('acc', A.acc, own, 'мой счёт') + accChipA('to', A.to, debt, 'долговой счёт');
+  else accRow = accChipA('acc', A.acc, () => true);
+  const types = [['income', '↙ Доход'], ['expense', '↗ Расход'], ['transfer', '⇄'], ['debt', '🤝']];
+  $('#add').innerHTML = `<div class="add-top"><button class="ibtn" data-act="closeAdd" aria-label="Закрыть">✕</button>
+      <div class="types">${types.map(([v, l]) => `<button class="t-${v} ${A.type === v ? 'on' : ''}" data-act="addType" data-v="${v}">${l}${v === 'transfer' && A.type === v ? ' Перевод' : v === 'debt' && A.type === v ? ' Долг' : ''}</button>`).join('')}</div>
+      ${A.id ? `<button class="del-link" data-act="delTx">Удалить</button>` : ''}</div>
+    <div class="amount" id="addAmt">${addAmountHtml()}</div>
+    ${A.type === 'debt' ? `<div class="seg" style="margin:0 0 8px">
+      <button class="${A.dir === 'out' ? 'on' : ''}" data-act="addDir" data-v="out">Деньги ушли<br><small class="muted">дал в долг / вернул</small></button>
+      <button class="${A.dir === 'in' ? 'on' : ''}" data-act="addDir" data-v="in">Деньги пришли<br><small class="muted">взял в долг / мне вернули</small></button></div>` : ''}
+    <div class="add-row">${accRow}<label class="chip">📅 <span>${dLabel}</span><input type="date" data-addf="date" value="${A.date}"></label></div>
+    <input class="note" data-addf="note" value="${esc(A.note)}" placeholder="Заметка">
+    <div id="addCats">${addCatsHtml()}</div>
+    ${A.type === 'expense' ? `<label class="check" style="margin:0 0 8px 4px"><input type="checkbox" data-addf="refund" ${A.refund ? 'checked' : ''}> Возврат (деньги вернулись по этой категории)</label>` : ''}
+    <div class="keys">${['1', '2', '3', '+', '4', '5', '6', '−', '7', '8', '9', '×', ',', '0', '⌫', '÷'].map(k =>
+      `<button class="${/[+−×÷]/.test(k) ? 'op' : ''}" data-act="key" data-k="${k}">${k}</button>`).join('')}</div>
+    <button class="save" data-act="saveTx">Сохранить</button>`;
+}
+function pressKey(k) {
+  let e = A.expr;
+  const lastNum = e.split(/[+−×÷]/).pop();
+  if (/\d/.test(k)) { if (e === '0') e = k; else if (/,\d\d$/.test(lastNum)) return; else e += k; }
+  else if (k === ',') { if (!lastNum.includes(',')) e += lastNum === '' ? '0,' : ','; }
+  else if (k === '⌫') { e = e.slice(0, -1) || '0'; }
+  else { if (/[+−×÷]$/.test(e)) e = e.slice(0, -1) + k; else if (e !== '0') e += k; }
+  A.expr = e;
+  $('#addAmt').innerHTML = addAmountHtml();
+}
+function saveTx() {
+  const v = round2(evalExpr(A.expr));
+  if (!(v > 0)) { toast('Введите сумму'); return; }
+  if (!A.acc) { toast('Выберите счёт'); return; }
+  let t;
+  const base = {date: A.date || today(), time: A.time || '', note: A.note.trim()};
+  if (A.type === 'expense' || A.type === 'income') t = Object.assign(base, {type: A.type, acc: A.acc, amount: A.type === 'expense' && A.refund ? -v : v, cat: A.cat, sub: A.sub, to: undefined, toAmount: undefined});
+  else {
+    if (!A.to) { toast(A.type === 'debt' ? 'Выберите долговой счёт' : 'Выберите счёт, куда'); return; }
+    if (A.to === A.acc) { toast('Счета должны отличаться'); return; }
+    const [from, to] = A.type === 'debt' && A.dir === 'in' ? [A.to, A.acc] : [A.acc, A.to];
+    t = Object.assign(base, {type: 'transfer', acc: from, to, amount: v, toAmount: v, cat: '', sub: ''});
+  }
+  if (A.id) Object.assign(S.tx.find(x => x.id === A.id), t);
+  else S.tx.push(Object.assign({id: uid(), src: 'manual'}, t));
+  S.lastAcc = A.acc;
+  const edited = !!A.id;
+  save(); closeAdd(); render(); toast(edited ? 'Изменено' : 'Сохранено');
 }
 
 // ---------- CSV import ----------
-// column detection by header name; Qalta: id, amount, note, date, category name, subcategory name, transfer account, transfer account kind
+// column detection by header name; Qalta: id, account name, account kind, amount, note, date, category name, subcategory name, transfer account...
 const DETECT = {
-  id: /^id$/i, cat: /categ|катег/i, sub: /subcat|подкат/i, amount: /amount|sum|сумм/i, date: /date|дата|time|время/i,
+  id: /^id$/i, account: /^account name$|^сч[её]т$/i, akind: /^account kind$/i,
+  cat: /categ|катег/i, sub: /subcat|подкат/i, amount: /amount|sum|сумм/i, date: /date|дата|time|время/i,
   note: /note|comment|memo|descr|замет|коммент|описан|примеч/i, type: /^type$|^тип/i,
-  transfer: /^transfer account$|^перевод|счет зачисл/i, tkind: /^transfer account kind$/i
+  transfer: /^transfer account$|^перевод|счет зачисл/i, tkind: /^transfer account kind$/i, tamount: /^transfer amount$/i
 };
-const FIELDS = [['cat', 'Категория'], ['sub', 'Подкатегория'], ['amount', 'Сумма'], ['date', 'Дата'], ['note', 'Заметка'], ['transfer', 'Перевод на счёт']];
+const FIELDS = [['cat', 'Категория'], ['sub', 'Подкатегория'], ['amount', 'Сумма'], ['date', 'Дата'], ['note', 'Заметка'], ['account', 'Счёт'], ['transfer', 'Перевод на счёт']];
 
 function parseCSV(text) {
   text = text.replace(/^﻿/, '');
@@ -613,24 +1023,25 @@ function parseAmount(s) {
   const n = parseFloat(s);
   return isFinite(n) ? (neg ? -n : n) : null;
 }
-function parseDate(s) {
+function parseDateTime(s) {
   s = String(s ?? '').trim(); let m;
-  // ISO timestamp in UTC (Qalta): take the local date, otherwise late-night operations shift a day
+  // ISO timestamp in UTC (Qalta): use local date and time, otherwise late-night operations shift a day
   if (/^\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})$/.test(s)) {
     const d = new Date(s);
-    if (!isNaN(d)) return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    if (!isNaN(d)) return {date: iso(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes())};
   }
+  const time = (s.match(/(\d{1,2}):(\d{2})/) || []).slice(1).map(x => pad(+x)).join(':');
   const ok = (y, mo, d) => { mo = +mo; d = +d; if (mo > 12 && d <= 12) [mo, d] = [d, mo]; return mo >= 1 && mo <= 12 && d >= 1 && d <= 31 ? y + '-' + pad(mo) + '-' + pad(d) : null; };
-  if ((m = s.match(/(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/))) return ok(m[1], m[2], m[3]);
-  if ((m = s.match(/(\d{1,2})[-.\/](\d{1,2})[-.\/](\d{2,4})/))) return ok(m[3].length === 2 ? '20' + m[3] : m[3], m[2], m[1]);
-  return null;
+  let date = null;
+  if ((m = s.match(/(\d{4})[-.\/](\d{1,2})[-.\/](\d{1,2})/))) date = ok(m[1], m[2], m[3]);
+  else if ((m = s.match(/(\d{1,2})[-.\/](\d{1,2})[-.\/](\d{2,4})/))) date = ok(m[3].length === 2 ? '20' + m[3] : m[3], m[2], m[1]);
+  return date ? {date, time} : null;
 }
 async function readText(file) {
   const buf = await file.arrayBuffer();
   try { return new TextDecoder('utf-8', {fatal: true}).decode(buf); }
   catch (e) { return new TextDecoder('windows-1251').decode(buf); }
 }
-
 function startImport(text) {
   const rows = parseCSV(text);
   if (!rows.length) { toast('В файле не нашлось строк'); return; }
@@ -645,9 +1056,9 @@ function startImport(text) {
       map[k] = i;
     }
   }
-  if (map.amount < 0) map.amount = head.findIndex((_, i) => rows.slice(hasHeader ? 1 : 0, 20).filter(r => parseAmount(r[i]) != null).length > 0 && i !== map.cat && i !== map.date);
+  if (map.amount < 0) map.amount = head.findIndex((_, i) => rows.slice(hasHeader ? 1 : 0, 20).some(r => parseAmount(r[i]) != null) && i !== map.cat && i !== map.date);
   if (map.cat < 0) map.cat = head.findIndex((_, i) => i !== map.amount && i !== map.date);
-  imp = {rows, hasHeader, map, mode: 'replace', invert: false, skipTransfers: true, target: cur};
+  imp = {rows, hasHeader, map, mode: 'skip', invert: false, skipTransfers: false};
   renderImport();
 }
 function buildItems() {
@@ -656,98 +1067,97 @@ function buildItems() {
   for (const r of hasHeader ? rows.slice(1) : rows) {
     let a = map.amount >= 0 ? parseAmount(r[map.amount]) : null;
     if (a == null || a === 0) { skipped++; continue; }
+    const col = k => map[k] >= 0 ? String(r[map[k]] ?? '').trim() : '';
     if (map.type >= 0) {
-      const t = norm(r[map.type]);
-      if (/перевод|transfer/.test(t)) { if (imp.skipTransfers) { skipped++; continue; } }
-      else if (/расход|expense|списан|debit|outcome|трат/.test(t)) a = -Math.abs(a);
+      const t = norm(col('type'));
+      if (/расход|expense|списан|debit|outcome|трат/.test(t)) a = -Math.abs(a);
       else if (/доход|income|зачисл|credit|поступ/.test(t)) a = Math.abs(a);
     }
     if (imp.invert) a = -a;
-    const col = k => map[k] >= 0 ? String(r[map[k]] ?? '').trim() : '';
-    let cat = col('cat');
-    const tr = col('transfer');
-    if (tr) {
-      // between own regular accounts it's not spending; to a debt/savings account it shows up as "Перевод → счёт"
-      const kind = norm(col('tkind'));
-      if (imp.skipTransfers && (!kind || kind === 'regular')) { skipped++; continue; }
-      if (!cat) cat = 'Перевод → ' + tr;
-    }
-    items.push({
-      date: map.date >= 0 ? parseDate(r[map.date]) : null,
-      cat, sub: col('sub'),
-      amount: Math.round(a * 100) / 100,
-      note: col('note'),
-      extId: col('id')
-    });
+    const dt = map.date >= 0 ? parseDateTime(r[map.date]) : null;
+    const it = {date: dt ? dt.date : today(), time: dt ? dt.time : '', amount: round2(a), note: col('note'), extId: col('id'),
+      account: col('account'), akind: col('akind'), cat: col('cat'), sub: col('sub'),
+      transfer: col('transfer'), tkind: col('tkind'), tamount: parseAmount(col('tamount'))};
+    if (it.transfer && imp.skipTransfers && kindOf(it.tkind) !== 'debt' && kindOf(it.akind) !== 'debt') { skipped++; continue; }
+    items.push(it);
   }
   return {items, skipped};
 }
 function renderImport() {
-  const {rows, hasHeader, map} = imp;
-  const head = rows[0];
+  const {rows, hasHeader, map} = imp, head = rows[0];
   const colOpts = sel => `<option value="-1">—</option>` + head.map((h, i) => `<option value="${i}" ${sel === i ? 'selected' : ''}>${esc(hasHeader ? h || 'Колонка ' + (i + 1) : 'Колонка ' + (i + 1))}</option>`).join('');
   openSheet(`<h2>Импорт операций</h2>
-    <p class="hint">Проверьте, что колонки определились правильно.</p>
+    <p class="hint">Проверьте, что колонки определились правильно. Недостающие счета и категории будут созданы.</p>
     <div class="maps">${FIELDS.map(([k, l]) => `<label>${l}<select data-imp="${k}">${colOpts(map[k])}</select></label>`).join('')}</div>
     <div class="preview" id="impPreview"></div>
     <label class="check" style="margin-top:14px"><input type="checkbox" data-impflag="invert" ${imp.invert ? 'checked' : ''}> Расходы в файле со знаком «+» (поменять знак)</label>
-    ${map.type >= 0 || map.transfer >= 0 ? `<label class="check" style="margin-top:10px"><input type="checkbox" data-impflag="skipTransfers" ${imp.skipTransfers ? 'checked' : ''}> Пропускать переводы между своими обычными счетами</label>
-      <p class="hint">Переводы на долговые и накопительные счета загружаются как «Перевод → счёт», их можно отнести к категории плана.</p>` : ''}
+    ${map.transfer >= 0 ? `<label class="check" style="margin-top:10px"><input type="checkbox" data-impflag="skipTransfers" ${imp.skipTransfers ? 'checked' : ''}> Не загружать переводы между своими счетами</label>` : ''}
     <div id="impSummary"></div>
-    <label>Если операция уже есть в месяце</label>
-    <div class="seg"><label><input type="radio" name="impmode" value="replace" ${imp.mode === 'replace' ? 'checked' : ''}><span>Заменить импорт</span></label>
-      <label><input type="radio" name="impmode" value="add" ${imp.mode === 'add' ? 'checked' : ''}><span>Добавить новые</span></label></div>
-    <p class="hint">«Заменить» — удалит ранее импортированные операции этих месяцев и загрузит файл заново (ручные операции останутся). «Добавить» — пропустит совпадающие операции.</p>
+    <label>Операции, которые уже загружались</label>
+    <div class="seg" style="background:var(--card2)"><label><input type="radio" name="impmode" value="skip" ${imp.mode === 'skip' ? 'checked' : ''}><span>Пропустить</span></label>
+      <label><input type="radio" name="impmode" value="replace" ${imp.mode === 'replace' ? 'checked' : ''}><span>Заменить все</span></label></div>
+    <p class="hint">«Пропустить» — добавятся только новые операции. «Заменить все» — удалит все ранее импортированные операции и загрузит файл заново (добавленные вручную останутся).</p>
     <div class="btns"><button class="btn ghost" data-act="close">Отмена</button><button class="btn" data-act="doImport">Импортировать</button></div>`);
   renderImpSummary();
 }
 function renderImpSummary() {
   const {items, skipped} = buildItems();
-  const months = new Map(), unknown = new Set();
-  for (const it of items) {
-    const k = it.date ? periodOf(it.date) : null; months.set(k, (months.get(k) || 0) + 1);
-    const m = S.months[k || imp.target] || S.months[sourceMonth(k || imp.target)] ;
-    if (it.amount < 0 && (!m || !findCat(m, it.cat))) unknown.add(it.cat || 'без категории');
+  $('#impPreview').innerHTML = `<table><tr><th>Дата</th><th>Счёт</th><th>Категория</th><th>Подкатегория</th><th>Сумма</th></tr>${items.slice(0, 5).map(i =>
+    `<tr><td>${i.date.slice(8)}.${i.date.slice(5, 7)}</td><td>${esc(i.account)}</td><td>${esc(i.transfer ? '→ ' + i.transfer : i.cat)}</td><td>${esc(i.sub)}</td><td>${nf.format(i.amount)}</td></tr>`).join('')}</table>`;
+  const newAcc = new Set(), newCat = new Set();
+  let exp = 0, inc = 0, trn = 0, from = '9999', to = '0000';
+  for (const i of items) {
+    for (const n of [i.account, i.transfer]) if (n && !findAccount(n)) newAcc.add(n);
+    if (i.transfer) trn++; else if (i.amount < 0) exp++; else inc++;
+    if (!i.transfer && i.cat && !findCat('expense', i.cat) && !findCat('income', i.cat)) newCat.add(i.cat);
+    if (i.date < from) from = i.date; if (i.date > to) to = i.date;
   }
-  $('#impPreview').innerHTML = `<table><tr><th>Дата</th><th>Категория</th><th>Подкатегория</th><th>Сумма</th></tr>${items.slice(0, 5).map(i =>
-    `<tr><td>${i.date ? i.date.slice(8) + '.' + i.date.slice(5, 7) : '—'}</td><td>${esc(i.cat)}</td><td>${esc(i.sub)}</td><td>${nf.format(i.amount)}</td></tr>`).join('')}</table>`;
-  const exp = items.filter(i => i.amount < 0).reduce((s, i) => s - i.amount, 0);
-  const inc = items.filter(i => i.amount > 0).reduce((s, i) => s + i.amount, 0);
-  $('#impSummary').innerHTML = `<div class="card" style="background:var(--bg);margin-top:14px">
+  $('#impSummary').innerHTML = `<div class="card" style="margin-top:14px">
     <b>${items.length} ${plural(items.length, 'операция', 'операции', 'операций')}</b>${skipped ? ` <span class="small">· пропущено ${skipped}</span>` : ''}
-    <div class="small">Расходы ${money(exp)} · Поступления ${money(inc)}</div>
-    <div class="small" style="margin-top:4px">${[...months].map(([k, n]) => (k ? monthLabel(k) : 'Без даты') + ': ' + n).join(' · ')}</div>
-    ${months.has(null) ? `<label>Операции без даты отнести к месяцу<input type="month" data-imptarget value="${imp.target}"></label>` : ''}
-    ${unknown.size ? `<p class="hint" style="color:var(--warn)">Нет в плане: ${[...unknown].map(esc).join(', ')}. После импорта их можно будет разобрать.</p>` : ''}
-  </div>`;
+    <div class="small">Расходов ${exp} · доходов ${inc} · переводов ${trn}</div>
+    ${items.length ? `<div class="small">С ${fmtDay(from).replace(/ — .*/, '')} по ${fmtDay(to).replace(/ — .*/, '')}</div>` : ''}
+    ${newAcc.size ? `<p class="hint">Новые счета: ${[...newAcc].map(esc).join(', ')}</p>` : ''}
+    ${newCat.size ? `<p class="hint">Новые категории: ${[...newCat].map(esc).join(', ')}</p>` : ''}</div>`;
 }
 function doImport() {
   const {items} = buildItems();
   if (!items.length) { toast('Нечего импортировать'); return; }
-  const groups = new Map();
-  for (const it of items) { const k = it.date ? periodOf(it.date) : imp.target; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
+  // a category name met with spending is an expense category; positive amounts in it are refunds
+  const expNames = new Set(items.filter(i => !i.transfer && i.amount < 0).map(i => norm(i.cat)));
+  if (imp.mode === 'replace') S.tx = S.tx.filter(t => t.src !== 'import');
+  const key = t => t.extId ? 'id:' + t.extId : [t.date, t.time || '', Math.abs(t.amount), norm(t.note)].join('|');
+  const seen = new Set(S.tx.map(key));
+  const defAcc = S.accounts.find(a => a.kind !== 'debt') || ensureAccount('Основной', 'regular');
   let added = 0, dup = 0;
-  const key = t => t.extId ? 'id:' + t.extId : [t.date || '', norm(t.cat), norm(t.sub), t.amount, norm(t.note)].join('|');
-  for (const [k, list] of groups) {
-    const m = ensureMonth(k);
-    if (imp.mode === 'replace') m.tx = m.tx.filter(t => t.src !== 'import');
-    const seen = new Set(m.tx.map(key));
-    for (const it of list) {
-      if (imp.mode === 'add' && seen.has(key(it))) { dup++; continue; }
-      m.tx.push(Object.assign({id: uid(), src: 'import'}, it)); added++;
+  for (const i of items) {
+    const acc = i.account ? ensureAccount(i.account, i.akind) : defAcc;
+    const base = {id: uid(), src: 'import', date: i.date, time: i.time, note: i.note};
+    if (i.extId) base.extId = i.extId;
+    let t;
+    if (i.transfer) {
+      const other = ensureAccount(i.transfer, i.tkind), amt = Math.abs(i.amount), tam = Math.abs(i.tamount ?? amt);
+      t = Object.assign(base, i.amount < 0 ? {type: 'transfer', acc: acc.id, to: other.id, amount: amt, toAmount: tam} : {type: 'transfer', acc: other.id, to: acc.id, amount: tam, toAmount: amt});
+    } else {
+      const asExpense = i.amount < 0 || (i.cat && (expNames.has(norm(i.cat)) || (findCat('expense', i.cat) && !findCat('income', i.cat))));
+      const type = asExpense ? 'expense' : 'income';
+      const c = i.cat ? ensureCat(type, i.cat) : null, s = c && i.sub ? ensureSub(c, i.sub) : null;
+      t = Object.assign(base, {type, acc: acc.id, amount: type === 'expense' ? -i.amount : i.amount, cat: c ? c.id : '', sub: s ? s.id : ''});
     }
+    const k = key(t);
+    if (seen.has(k)) { dup++; continue; }
+    seen.add(k); S.tx.push(t); added++;
   }
-  save();
-  const ks = [...groups.keys()].sort();
-  cur = ks[ks.length - 1];
-  closeSheet(); tab = 'overview'; render();
-  toast(`Загружено ${added}${dup ? `, пропущено дублей ${dup}` : ''}`);
+  const dolg = findCat('expense', 'Долг');
+  for (const a of S.accounts) if (a.kind === 'debt' && dolg && !a.budgetCat) a.budgetCat = dolg.id;
+  save(); closeSheet(); tab = 'home'; render();
+  toast(`Загружено ${added}${dup ? `, уже были: ${dup}` : ''}`);
 }
+function plural(n, a, b, c) { const k = n % 100, j = n % 10; return k > 10 && k < 20 ? c : j === 1 ? a : j >= 2 && j <= 4 ? b : c; }
 
 // ---------- backup ----------
 async function doBackup() {
   const name = 'budget-backup-' + today() + '.json';
-  const data = JSON.stringify({app: 'budget-pwa', version: 1, exportedAt: new Date().toISOString(), data: S});
+  const data = JSON.stringify({app: 'budget-pwa', version: 2, exportedAt: new Date().toISOString(), data: S});
   const file = new File([data], name, {type: 'application/json'});
   const done = () => { S.lastBackup = Date.now(); save(); render(); toast('Копия сохранена'); };
   try {
@@ -762,16 +1172,11 @@ async function restoreFrom(file) {
   try {
     const obj = JSON.parse(await readText(file));
     const d = obj && obj.data ? obj.data : obj;
-    if (!d || typeof d.months !== 'object') throw new Error('это не файл резервной копии');
-    const n = Object.keys(d.months).length;
-    if (Object.keys(S.months).length && !confirm(`Заменить текущие данные копией (${n} мес.)?`)) return;
-    S = Object.assign(blank(), d);
-    for (const m of Object.values(S.months)) { m.cats = m.cats || []; m.tx = m.tx || []; m.cats.forEach(c => c.subs = c.subs || []); }
-    save();
-    const ks = Object.keys(S.months).sort();
-    cur = periodOf(today());
-    if (!S.months[cur] && ks.length) cur = ks[ks.length - 1];
-    tab = 'overview'; render(); toast('Данные восстановлены');
+    if (!d || (typeof d.months !== 'object' && !Array.isArray(d.tx))) throw new Error('это не файл резервной копии');
+    if ((S.tx.length || S.accounts.length) && !confirm('Заменить текущие данные данными из копии?')) return;
+    const keepBackup = S;
+    try { S = migrate(d); } catch (e) { S = keepBackup; throw e; }
+    save(); cur = periodOf(today()); tab = 'home'; render(); toast('Данные восстановлены');
   } catch (e) { toast('Не удалось прочитать файл: ' + e.message); }
 }
 
@@ -780,136 +1185,160 @@ let toastTimer;
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 2600); }
 
 // ---------- actions ----------
-const curMonth = () => S.months[cur];
-const catOf = el => { const m = curMonth(), id = el.closest('[data-cid]')?.dataset.cid; return m && m.cats.find(c => c.id === id); };
+function moveCat(id, d) {
+  const same = S.cats.filter(c => c.type === catType), i = same.findIndex(c => c.id === id), j = i + d;
+  if (j < 0 || j >= same.length) return;
+  const ia = S.cats.indexOf(same[i]), ib = S.cats.indexOf(same[j]);
+  [S.cats[ia], S.cats[ib]] = [S.cats[ib], S.cats[ia]]; save(); render();
+}
 const ACT = {
-  tab: el => { tab = el.dataset.tab; if (tab !== 'tx') txFilter = 'all'; render(); scrollTo(0, 0); },
-  prev: () => { cur = shiftMonth(cur, -1); txFilter = 'all'; render(); },
-  next: () => { cur = shiftMonth(cur, 1); txFilter = 'all'; render(); },
-  createMonth: () => { ensureMonth(cur); save(); render(); },
+  tab: el => { tab = el.dataset.tab; sub = ''; homeLimit = 200; render(); scrollTo(0, 0); },
+  back: () => { sub = ''; render(); },
+  pprev: () => { cur = shiftMonth(cur, -1); render(); },
+  pnext: () => { cur = shiftMonth(cur, 1); render(); },
+  pmode: el => { const k = el.dataset.k; if (k === 'home') homeAll = !homeAll; else if (k === 'ana') anaAll = !anaAll; render(); },
+  search: () => { searchOn = !searchOn; if (!searchOn) homeQ = ''; render(); if (searchOn) setTimeout(() => $('[data-search]').focus(), 50); },
+  showMore: () => { homeLimit += 300; render(); },
   starter: () => {
-    S.months[cur] = {income: null, tx: [], cats: STARTER.map(([n, subs]) => ({id: uid(), name: n, limit: 0, subs: (subs || []).map(s => ({id: uid(), name: s, limit: 0}))}))};
-    save(); tab = 'plan'; render();
+    ensureAccount('Основной', 'regular'); ensureAccount('Наличные', 'regular');
+    for (const type of ['expense', 'income']) for (const [n, subs] of STARTER[type]) { const c = ensureCat(type, n); for (const s of subs || []) ensureSub(c, s); }
+    save(); tab = 'accounts'; render();
   },
-  blankStart: () => { S.months[cur] = {income: null, cats: [], tx: []}; save(); tab = 'plan'; render(); },
   hideInstall: () => { S.hideInstall = true; save(); render(); },
   restore: () => $('#fileBackup').click(),
   backup: () => doBackup(),
-  editIncome: () => { tab = 'plan'; render(); scrollTo(0, 0); setTimeout(() => $('[data-f=income]')?.focus(), 50); },
-  cat: el => openCat(el.dataset.id),
-  goPlan: () => { closeSheet(); tab = 'plan'; render(); },
-  showUn: () => { tab = 'tx'; txFilter = 'un'; render(); scrollTo(0, 0); },
-  close: () => closeSheet(),
-  addCat: () => {
-    curMonth().cats.push({id: uid(), name: 'Новая категория', limit: 0, subs: []}); save(); render();
-    const inputs = document.querySelectorAll('.pc-name'); const last = inputs[inputs.length - 1];
-    if (last) { last.scrollIntoView({block: 'center'}); last.focus(); last.select(); }
-  },
-  addSub: el => {
-    const c = catOf(el);
-    c.subs.push({id: uid(), name: c.subs.length ? 'Новая' : c.name, limit: c.subs.length ? 0 : num(c.limit)}); c.limit = 0;
-    save(); render();
-    const row = document.querySelector(`[data-cid="${c.id}"] .srow:last-of-type input`); if (row) { row.focus(); row.select(); }
-  },
-  delSub: el => {
-    const c = catOf(el), sid = el.closest('[data-sid]').dataset.sid;
-    const s = c.subs.find(x => x.id === sid);
-    c.subs = c.subs.filter(x => x.id !== sid);
-    if (!c.subs.length) c.limit = num(s && s.limit);
-    save(); render();
-  },
-  moveUp: el => move(el, -1), moveDown: el => move(el, 1),
-  delCat: el => {
-    const c = catOf(el);
-    if (!confirm(`Удалить категорию «${c.name}» из плана на ${monthLabel(cur).toLowerCase()}?`)) return;
-    curMonth().cats = curMonth().cats.filter(x => x.id !== c.id); save(); render();
-  },
-  copyPrev: () => {
-    const prev = Object.keys(S.months).sort().filter(k => k < cur).pop();
-    if (!prev || !confirm(`Заменить план на ${monthLabel(cur).toLowerCase()} копией плана за ${monthLabel(prev).toLowerCase()}?`)) return;
-    curMonth().cats = JSON.parse(JSON.stringify(S.months[prev].cats)); curMonth().income = S.months[prev].income; save(); render();
-  },
   import: () => openSheet(`<h2>Импорт из Qalta</h2>
-    <ol class="steps"><li>В Qalta сделайте экспорт операций в CSV за месяц.</li><li>Нажмите «Выбрать файл» и найдите его в «Файлах» (или в «Загрузках»).</li></ol>
+    <ol class="steps"><li>В Qalta: Настройки → Экспорт → CSV. Для переноса лучше выгрузить <b>всю историю и все счета</b> — тогда остатки совпадут.</li>
+      <li>Нажмите «Выбрать файл» и найдите его в «Файлах».</li></ol>
+    <p class="hint">Повторный импорт того же файла не создаёт дублей.</p>
     <div class="btns"><button class="btn" data-act="pickCsv">Выбрать файл</button></div>
-    <details><summary>Или вставить текст таблицы</summary><textarea id="pasteArea" rows="6" placeholder="Категория;Сумма;Дата"></textarea>
+    <details><summary>Или вставить текст таблицы</summary><textarea id="pasteArea" rows="6"></textarea>
     <div class="btns"><button class="btn ghost" data-act="parsePaste">Разобрать</button></div></details>`),
   pickCsv: () => $('#fileCsv').click(),
   parsePaste: () => { const t = $('#pasteArea').value; if (t.trim()) startImport(t); },
   doImport: () => doImport(),
-  addTx: () => openTx(null),
-  tx: el => openTx(el.dataset.id),
-  saveTx: el => {
-    const id = el.dataset.id, inc = document.querySelector('input[name=kind]:checked').value === 'inc';
-    const a = Math.abs(num($('#fAmt').value));
-    if (!a) { toast('Введите сумму'); return; }
-    const date = $('#fDate').value || null, target = date ? periodOf(date) : cur;
-    let t = {id: uid(), src: 'manual'};
-    if (id) { const m = curMonth(); t = m.tx.find(x => x.id === id); m.tx = m.tx.filter(x => x.id !== id); }
-    Object.assign(t, {date, cat: $('#fCat').value, sub: $('#fSub').value, amount: inc ? a : -a, note: $('#fNote').value.trim()});
-    ensureMonth(target).tx.push(t); save(); closeSheet(); render();
-    if (target !== cur) toast('Операция перенесена в ' + monthLabel(target).toLowerCase());
+  close: () => closeSheet(),
+  wipe: () => { if (!confirm('Удалить все данные на этом устройстве? Это нельзя отменить.')) return; S = blank(); save(); tab = 'home'; render(); },
+  // accounts
+  openAcc: el => { homeAcc = el.dataset.id; tab = 'home'; render(); scrollTo(0, 0); },
+  editAcc: el => sheetAccount(el.dataset.id),
+  newAcc: () => sheetAccount(''),
+  saveAcc: el => {
+    const name = $('#fName').value.trim(); if (!name) { toast('Введите название'); return; }
+    const id = el.dataset.id, a = id ? ACC.get(id) : {id: uid()};
+    if (!id && findAccount(name)) { toast('Такой счёт уже есть'); return; }
+    Object.assign(a, {name, kind: document.querySelector('input[name=fKind]:checked').value, initial: num($('#fInit').value),
+      budgetCat: $('#fBudCat').value, icon: pickedIcon(), color: pickedColor() || a.color || PALETTE[0]});
+    if (!id) S.accounts.push(a);
+    save(); closeSheet(); render();
   },
-  delTx: el => { const m = curMonth(); m.tx = m.tx.filter(x => x.id !== el.dataset.id); save(); closeSheet(); render(); },
-  delAlias: el => { delete S.aliases[el.dataset.k]; save(); render(); },
-  wipe: () => { if (!confirm('Удалить все данные на этом устройстве? Это нельзя отменить.')) return; S = blank(); save(); tab = 'overview'; render(); }
+  delAcc: el => {
+    if (el.dataset.used) { toast('По счёту есть операции — сначала удалите или перенесите их'); return; }
+    if (!confirm('Удалить счёт?')) return;
+    S.accounts = S.accounts.filter(a => a.id !== el.dataset.id); save(); closeSheet(); render();
+  },
+  // categories
+  goCats: () => { closeSheet(); tab = 'more'; sub = 'cats'; render(); scrollTo(0, 0); },
+  catType: el => { catType = el.dataset.v; render(); },
+  newCat: () => sheetCat('', '', ''),
+  editCat: el => sheetCat(el.dataset.id, '', ''),
+  editSub: el => sheetCat('', el.dataset.id, ''),
+  newSub: el => sheetCat('', '', el.dataset.id),
+  catUp: el => moveCat(el.dataset.id, -1), catDown: el => moveCat(el.dataset.id, 1),
+  pickIcon: el => {
+    $('#fIcon').value = el.dataset.e; $('#iconShow').textContent = el.dataset.e; if ($('#fIconCustom')) $('#fIconCustom').value = '';
+    document.querySelectorAll('.emojis button').forEach(b => b.classList.toggle('on', b === el));
+  },
+  saveCat: el => {
+    const name = $('#fName').value.trim(); if (!name) { toast('Введите название'); return; }
+    const data = {name, icon: pickedIcon(), color: pickedColor()};
+    if (el.dataset.id) Object.assign(CAT.get(el.dataset.id), data);
+    else if (el.dataset.sid) Object.assign(SUB.get(el.dataset.sid), data);
+    else if (el.dataset.parent) { const c = CAT.get(el.dataset.parent); if (findSub(c, name)) { toast('Такая подкатегория уже есть'); return; } c.subs.push(Object.assign({id: uid()}, data)); }
+    else {
+      const type = (document.querySelector('input[name=fCType]:checked') || {}).value || catType;
+      if (findCat(type, name)) { toast('Такая категория уже есть'); return; }
+      S.cats.push(Object.assign({id: uid(), type, subs: []}, data)); catType = type;
+    }
+    save(); closeSheet(); render();
+  },
+  delCat: el => {
+    const id = el.dataset.id, sid = el.dataset.sid;
+    const n = S.tx.filter(t => id ? t.cat === id : t.sub === sid).length;
+    if (!confirm(n ? `Удалить? ${n} ${plural(n, 'операция останется', 'операции останутся', 'операций останутся')} ${id ? 'без категории' : 'без подкатегории'}.` : 'Удалить?')) return;
+    if (id) { S.cats = S.cats.filter(c => c.id !== id); S.tx.forEach(t => { if (t.cat === id) { t.cat = ''; t.sub = ''; } }); }
+    else { const c = SUBCAT.get(sid); c.subs = c.subs.filter(s => s.id !== sid); S.tx.forEach(t => { if (t.sub === sid) t.sub = ''; }); }
+    save(); closeSheet(); render();
+  },
+  // analytics
+  anaType: el => { anaType = el.dataset.v; anaOff.clear(); anaOpen.clear(); render(); },
+  anaToggle: el => { const id = el.dataset.id; anaOff.has(id) ? anaOff.delete(id) : anaOff.add(id); render(); },
+  anaAll: () => { anaOff.clear(); render(); },
+  anaOpen: el => { const id = el.dataset.id; anaOpen.has(id) ? anaOpen.delete(id) : anaOpen.add(id); render(); },
+  // budget
+  budMode: el => { budMode = el.dataset.v; render(); },
+  budCat: el => sheetBudCat(el.dataset.id),
+  goPlan: () => { closeSheet(); budMode = 'plan'; render(); },
+  editIncome: () => { budMode = 'plan'; render(); setTimeout(() => $('[data-income]')?.focus(), 50); },
+  showUnc: () => { const r = budgetCalc(cur); openSheet(`<h2>Без категории</h2><p class="hint">Нажмите на операцию, чтобы выбрать категорию.</p>${txList(r.uncList, '')}`); },
+  // operations
+  add: () => openAdd(''),
+  edit: el => { closeSheet(); openAdd(el.dataset.id); },
+  closeAdd: () => closeAdd(),
+  addType: el => {
+    const v = el.dataset.v; if (A.type === v) return;
+    const wasCat = A.type === 'expense' || A.type === 'income';
+    A.type = v;
+    if (!(wasCat && (v === 'expense' || v === 'income') && CAT.get(A.cat) && CAT.get(A.cat).type === v)) { A.cat = ''; A.sub = ''; }
+    const accOk = a => a && (v === 'expense' || v === 'income' || a.kind !== 'debt');
+    if (!accOk(ACC.get(A.acc))) A.acc = (S.accounts.find(a => a.kind !== 'debt') || {}).id || '';
+    const toOk = a => a && a.id !== A.acc && (v === 'debt' ? a.kind === 'debt' : a.kind !== 'debt');
+    if (!toOk(ACC.get(A.to))) A.to = (S.accounts.find(toOk) || {}).id || '';
+    renderAdd();
+  },
+  addDir: el => { A.dir = el.dataset.v; renderAdd(); },
+  pickCat: el => { A.cat = el.dataset.id; A.sub = ''; if (A.q) { A.q = ''; } $('#addCats').innerHTML = addCatsHtml(); },
+  pickSub: el => { if (el.dataset.id) { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; } else A.sub = ''; A.q = ''; $('#addCats').innerHTML = addCatsHtml(); },
+  key: el => pressKey(el.dataset.k),
+  saveTx: () => saveTx(),
+  delTx: () => { if (!confirm('Удалить операцию?')) return; S.tx = S.tx.filter(t => t.id !== A.id); save(); closeAdd(); render(); toast('Удалено'); }
 };
-function move(el, d) {
-  const cats = curMonth().cats, i = cats.indexOf(catOf(el)), j = i + d;
-  if (j < 0 || j >= cats.length) return;
-  [cats[i], cats[j]] = [cats[j], cats[i]]; save(); render();
-}
 
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
   const fn = ACT[el.dataset.act]; if (fn) { e.preventDefault(); fn(el, e); }
 });
 
-// typing in plan / settings: update state in place, without re-rendering (keeps focus on iPhone)
+// typing: update state in place without re-rendering, so the iPhone keyboard stays open
 document.addEventListener('input', e => {
-  const el = e.target, f = el.dataset.f; if (!f) return;
-  if (f === 'currency') { S.currency = el.value.trim(); saveSoon(); return; }
-  const m = curMonth(); if (!m) return;
-  if (f === 'income') m.income = el.value.trim() === '' ? null : num(el.value);
-  else {
-    const c = catOf(el); if (!c) return;
-    const s = el.closest('[data-sid]') && c.subs.find(x => x.id === el.closest('[data-sid]').dataset.sid);
-    if (f === 'cname') c.name = el.value;
-    else if (f === 'climit') c.limit = num(el.value);
-    else if (f === 'sname') s.name = el.value;
-    else if (f === 'slimit') s.limit = num(el.value);
-    const tot = el.closest('[data-cid]').querySelector('[data-total]'); if (tot) tot.textContent = money(catLimit(c));
+  const el = e.target, d = el.dataset;
+  if ('search' in d) { homeQ = el.value; homeLimit = 200; const tmp = document.createElement('div'); tmp.innerHTML = vHome(); $('#homeList').innerHTML = tmp.querySelector('#homeList').innerHTML; return; }
+  if ('catq' in d) { A.q = el.value; const pos = el.selectionStart; $('#addCats').innerHTML = addCatsHtml(); const n = $('[data-catq]'); n.focus(); n.setSelectionRange(pos, pos); return; }
+  if (d.addf === 'note') { A.note = el.value; return; }
+  if ('currency' in d) { S.currency = el.value.trim(); saveSoon(); return; }
+  if ('lim' in d) {
+    const b = bmut(cur); b.limits[d.lim] = num(el.value);
+    const card = el.closest('[data-cid]'), c = CAT.get(card.dataset.cid);
+    card.querySelector('[data-total]').textContent = money(catLimit(b.limits, c));
+    $('#plansum').innerHTML = planSum(cur); saveSoon(); return;
   }
-  const ps = $('#plansum'); if (ps) ps.innerHTML = planSum(m);
-  saveSoon();
+  if ('income' in d) { bmut(cur).income = el.value.trim() === '' ? null : num(el.value); $('#plansum').innerHTML = planSum(cur); saveSoon(); }
 });
 
 document.addEventListener('change', e => {
-  const el = e.target;
-  // renaming a category keeps old transactions attached to it
-  if (el.dataset.f === 'cname') {
-    const old = norm(el.dataset.orig), nw = el.value.trim();
-    if (!nw) { el.value = el.dataset.orig; catOf(el).name = el.dataset.orig; save(); return; }
-    if (old && old !== norm(nw)) {
-      for (const k in S.aliases) if (norm(S.aliases[k]) === old) S.aliases[k] = nw;
-      S.aliases[old] = nw; delete S.aliases[norm(nw)];
-    }
-    catOf(el).name = nw; el.dataset.orig = nw; save();
-  } else if (el.dataset.f === 'currency') { save(); }
-  else if ('startday' in el.dataset) setDefaultStartDay(+el.value);
-  else if ('pstart' in el.dataset) setPeriodStartDay(+el.value || 0);
-  else if (el.id === 'fCat') { $('#fSub').innerHTML = subOpts(curMonth(), el.value, ''); }
-  else if ('txfilter' in el.dataset) { txFilter = el.value; render(); }
-  else if ('un' in el.dataset && el.value) {
-    const k = el.dataset.un, m = curMonth();
-    if (k) S.aliases[k] = el.value;
-    else m.tx.forEach(t => { if (!norm(t.cat) && t.amount < 0) t.cat = el.value; });
-    save(); render(); toast('Готово');
-  }
-  else if (el.dataset.imp) { imp.map[el.dataset.imp] = +el.value; renderImpSummary(); }
-  else if (el.dataset.impflag) { imp[el.dataset.impflag] = el.checked; renderImpSummary(); }
+  const el = e.target, d = el.dataset;
+  if ('homeacc' in d) { homeAcc = el.value; homeLimit = 200; render(); }
+  else if ('anaacc' in d) { anaAcc = el.value; render(); }
+  else if ('startday' in d) setDefaultStartDay(+el.value);
+  else if ('pstart' in d) setPeriodStartDay(+el.value || 0);
+  else if ('currency' in d) save();
+  else if (d.addf === 'acc' || d.addf === 'to') { A[d.addf] = el.value; renderAdd(); }
+  else if (d.addf === 'date') { A.date = el.value || today(); renderAdd(); }
+  else if (d.addf === 'refund') { A.refund = el.checked; $('#addAmt').innerHTML = addAmountHtml(); }
+  else if (el.id === 'fIconCustom' && el.value.trim()) { $('#iconShow').textContent = el.value.trim(); }
+  else if (d.imp) { imp.map[d.imp] = +el.value; renderImpSummary(); }
+  else if (d.impflag) { imp[d.impflag] = el.checked; renderImpSummary(); }
   else if (el.name === 'impmode') imp.mode = el.value;
-  else if ('imptarget' in el.dataset && el.value) { imp.target = el.value; renderImpSummary(); }
 });
 
 $('#fileCsv').addEventListener('change', async e => {
@@ -919,6 +1348,7 @@ $('#fileCsv').addEventListener('change', async e => {
 $('#fileBackup').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) restoreFrom(f); });
 
 render();
+if (localStorage.getItem(KEY) && !JSON.parse(localStorage.getItem(KEY)).accounts) save(); // persist the v1 -> v2 migration
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
 </script>
