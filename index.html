@@ -502,27 +502,42 @@ function effect(t, accId) {
   return null;
 }
 function catLimit(L, c) { return num(L[c.id]) + c.subs.reduce((s, x) => s + num(L[x.id]), 0); }
+// accounts the salary budget is planned from (default: "Основной"); other accounts don't touch the budget
+function budgetAccIds() {
+  const ids = (S.budgetAccs || []).filter(id => ACC.has(id));
+  if (ids.length) return new Set(ids);
+  const main = findAccount('Основной') || sortedAccounts().find(a => a.kind !== 'debt');
+  return new Set(main ? [main.id] : []);
+}
+// how an expense or transfer counts in the budget: [category, subcategory, amount], ['unc'|'out', '', amount], or null
+function budKey(t, inB) {
+  if (t.type === 'expense') return !inB.has(t.acc) ? null : CAT.has(t.cat) ? [t.cat, SUB.has(t.sub) ? t.sub : '', t.amount] : ['unc', '', t.amount];
+  if (t.type !== 'transfer') return null;
+  const fIn = inB.has(t.acc), tIn = inB.has(t.to), to = ACC.get(t.to), fr = ACC.get(t.acc);
+  // leaving the budget: into the category linked to that account (pension, debt...), otherwise "put aside"
+  if (fIn && !tIn) return to && CAT.has(to.budgetCat) ? [to.budgetCat, '', t.amount] : ['out', '', t.amount];
+  // money back from a linked account (a debt repaid) reduces that category; other incoming transfers don't count
+  if (!fIn && tIn && fr && CAT.has(fr.budgetCat)) return [fr.budgetCat, '', -(t.toAmount ?? t.amount)];
+  return null;
+}
 function budgetCalc(k) {
-  const a = periodStart(k), b = periodEnd(k), B = bget(k), L = B.limits || {};
-  const cat = new Map(), sub = new Map(), uncList = [];
-  let incomeTx = 0, unc = 0;
+  const a = periodStart(k), b = periodEnd(k), B = bget(k), L = B.limits || {}, inB = budgetAccIds();
+  const cat = new Map(), sub = new Map(), uncList = [], outList = [];
+  let incomeTx = 0, unc = 0, out = 0;
   const add = (cid, sid, v) => { cat.set(cid, (cat.get(cid) || 0) + v); const key = sid || cid + ':own'; sub.set(key, (sub.get(key) || 0) + v); };
   for (const t of S.tx) {
     if (t.date < a || t.date > b) continue;
-    if (t.type === 'expense') { if (CAT.has(t.cat)) add(t.cat, SUB.has(t.sub) ? t.sub : '', t.amount); else { unc += t.amount; uncList.push(t); } }
-    else if (t.type === 'income') incomeTx += t.amount;
-    else {
-      // transfers to an account linked to a budget category (debt, pension...) count as spending in it
-      const to = ACC.get(t.to), fr = ACC.get(t.acc);
-      if (to && CAT.has(to.budgetCat) && !(fr && fr.budgetCat)) add(to.budgetCat, '', t.amount);
-      else if (fr && CAT.has(fr.budgetCat) && !(to && to.budgetCat)) add(fr.budgetCat, '', -(t.toAmount ?? t.amount));
-    }
+    if (t.type === 'income') { if (inB.has(t.acc)) incomeTx += t.amount; continue; }
+    const k2 = budKey(t, inB); if (!k2) continue;
+    if (k2[0] === 'unc') { unc += k2[2]; uncList.push(t); }
+    else if (k2[0] === 'out') { out += k2[2]; outList.push(t); }
+    else add(k2[0], k2[1], k2[2]);
   }
   const plan = S.cats.filter(c => c.type === 'expense').reduce((s, c) => s + catLimit(L, c), 0);
-  const spent = [...cat.values()].reduce((s, v) => s + v, 0) + unc;
+  const spent = [...cat.values()].reduce((s, v) => s + v, 0) + unc + out;
   const auto = B.income == null || B.income === '';
   const income = auto ? incomeTx : num(B.income);
-  return {a, b, L, cat, sub, unc, uncList, plan, spent, income, incomeTx, auto, free: income - plan, left: income - spent};
+  return {a, b, L, inB, cat, sub, unc, uncList, out, outList, plan, spent, income, incomeTx, auto, free: income - plan, left: income - spent};
 }
 function status(limit, spent) {
   if (limit <= 0) return spent > 0.005 ? ['Вне плана', 'warn'] : ['Нет лимита', 'muted'];
@@ -805,6 +820,8 @@ function vOverview() {
   </div>`;
   if (r.uncList.length) h += `<button class="alert" data-act="showUnc">⚠ Без категории: ${r.uncList.length} на ${money(r.unc)} — разобрать</button>`;
   h += `<h3>Категории</h3>`;
+  if (r.outList.length) h += `<button class="cat" data-act="showOut"><div class="r1">${icon('📤', '#64748b', 'sm')}<b>Отложено на другие счета</b><span class="num">${money(r.out)}</span></div>
+    <div class="small" style="margin-top:-4px">${r.outList.length} ${plural(r.outList.length, 'перевод', 'перевода', 'переводов')} с бюджетных счетов · вне плана</div></button>`;
   for (const c of S.cats.filter(c => c.type === 'expense')) {
     const lim = catLimit(r.L, c), sp = r.cat.get(c.id) || 0;
     if (lim <= 0 && Math.abs(sp) < 0.005) continue;
@@ -827,6 +844,9 @@ function vPlan() {
       ${days.map(d => `<option value="${d}" ${(S.budgets[cur] || {}).startDay === d ? 'selected' : ''}>${d} ${MONTHS_GEN[+cur.slice(5) - 1]}</option>`).join('')}
     </select></label>
     <p class="hint">Зарплата пришла раньше, например 19-го вместо 20-го? Поставьте 19 — прошлый период закончится 18-го.</p>
+    <button class="row" style="width:100%;margin-top:14px" data-act="budAccs"><span class="muted">Счета бюджета</span>
+      <b style="text-align:right">${[...r.inB].map(id => esc(accName(id))).join(', ') || '—'} ›</b></button>
+    <p class="hint">Только расходы и доходы этих счетов идут в бюджет. Траты с других счетов (накопления и т.п.) лимиты не трогают.</p>
     <label>Доход за месяц<input type="text" inputmode="decimal" data-income value="${B.income ?? ''}" placeholder="авто: ${nf.format(r.incomeTx)}"></label>
     <p class="hint">Пусто — доход считается по поступлениям за период.</p>
   </section>
@@ -1014,7 +1034,7 @@ function sheetAnaCat(id, sid) {
 }
 function sheetBudCat(id) {
   const c = CAT.get(id), r = budgetCalc(cur), lim = catLimit(r.L, c), sp = r.cat.get(id) || 0;
-  const list = S.tx.filter(t => t.date >= r.a && t.date <= r.b && (t.type === 'expense' && t.cat === id || t.type === 'transfer' && ((ACC.get(t.to) || {}).budgetCat === id || (ACC.get(t.acc) || {}).budgetCat === id)));
+  const list = S.tx.filter(t => { if (t.date < r.a || t.date > r.b) return false; const k = budKey(t, r.inB); return k && k[0] === id; });
   const rows = [{name: c.name + ' (общее)', icon: c.icon, key: id + ':own', lim: num(r.L[id])}].concat(c.subs.map(s => ({name: s.name, icon: s.icon, key: s.id, lim: num(r.L[s.id])})));
   openSheet(`<h2>${esc(c.icon)} ${esc(c.name)}</h2>
     <div class="row small num"><span>Потрачено ${money(sp)} из ${money(lim)}</span><span class="${lim - sp < 0 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div>
@@ -1541,6 +1561,25 @@ const ACT = {
   budCat: el => sheetBudCat(el.dataset.id),
   goPlan: () => { closeSheet(); budMode = 'plan'; render(); },
   editIncome: () => { budMode = 'plan'; render(); setTimeout(() => $('[data-income]')?.focus(), 50); },
+  showOut: () => {
+    const r = budgetCalc(cur);
+    openSheet(`<h2>📤 Отложено на другие счета</h2>
+      <p class="hint">Переводы с бюджетных счетов на счета без категории бюджета. Чтобы перевод закрывал лимит категории (например, «Пенсия»),
+      укажите её у счёта: «Счета» → ✎ → «Переводы на этот счёт считать как».</p>
+      ${r.outList.length ? txList(r.outList, '') : '<p class="muted">Переводов нет.</p>'}`, ACT.showOut);
+  },
+  budAccs: () => {
+    const inB = budgetAccIds(), bal = balances();
+    openSheet(`<h2>Счета бюджета</h2>
+      <p class="hint">Отметьте счета, с которых вы тратите зарплату. Расходы и доходы остальных счетов в бюджете не учитываются.</p>
+      ${sortedAccounts().filter(a => a.kind !== 'debt').map(a => `<button class="tx pick" data-act="toggleBudAcc" data-id="${a.id}">${icon(a.icon, a.color, 'round')}
+        <span class="t"><b>${esc(a.name)}</b></span><span class="amt num">${money(bal.get(a.id) || 0)}</span><span class="tick">${inB.has(a.id) ? '✓' : ''}</span></button>`).join('')}`, ACT.budAccs);
+  },
+  toggleBudAcc: el => {
+    const ids = budgetAccIds(), id = el.dataset.id;
+    if (ids.has(id)) { if (ids.size === 1) { toast('Нужен хотя бы один счёт'); return; } ids.delete(id); } else ids.add(id);
+    S.budgetAccs = [...ids]; save(); render(); ACT.budAccs();
+  },
   showUnc: () => {
     const r = budgetCalc(cur);
     openSheet(`<h2>Без категории</h2><p class="hint">Нажмите на операцию, чтобы выбрать категорию.</p>${r.uncList.length ? txList(r.uncList, '') : '<p class="muted">Всё разобрано 👍</p>'}`, ACT.showUnc);
