@@ -50,7 +50,8 @@ main{max-width:640px;margin:0 auto}
 .top{position:fixed;top:0;left:0;right:0;z-index:5;background:var(--bg);
   padding:env(safe-area-inset-top) 8px 0;display:flex;align-items:center;justify-content:center;height:calc(env(safe-area-inset-top) + 52px);
   border-bottom:1px solid var(--line)}
-.top .mtitle{font-weight:650;font-size:17px;min-width:170px;text-align:center}
+.top .mtitle{font-weight:650;font-size:17px;min-width:170px;text-align:center;line-height:1.2}
+.top .mtitle small{display:block;font-size:12px;font-weight:500;color:var(--muted)}
 .icon{width:44px;height:44px;border-radius:12px;font-size:26px;line-height:1;color:var(--accent)}
 .icon:active{background:var(--accent-soft)}
 
@@ -193,10 +194,12 @@ const nf = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2});
 const money = n => nf.format(Math.round((n || 0) * 100) / 100) + (S.currency ? ' ' + S.currency : '');
 const num = v => { const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
 const pad = n => String(n).padStart(2, '0');
-const today = () => { const d = new Date(); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
+const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+const today = () => iso(new Date());
+const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
 
 // ---------- storage ----------
-function blank() { return {version: 1, currency: 'Br', months: {}, aliases: {}, lastBackup: null, hideInstall: false}; }
+function blank() { return {version: 1, currency: 'Br', startDay: 1, months: {}, aliases: {}, lastBackup: null, hideInstall: false}; }
 function load() {
   try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.months) return Object.assign(blank(), d); } catch (e) {}
   return blank();
@@ -210,8 +213,50 @@ let saveTimer;
 const saveSoon = () => { clearTimeout(saveTimer); saveTimer = setTimeout(save, 300); };
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 
+// ---------- budget periods ----------
+// Period "2026-10" starts on its start day in October and ends the day before the next period starts.
+// The start day is S.startDay unless a period has its own (e.g. salary came a day early).
+const daysIn = (y, m) => new Date(y, m, 0).getDate();
+function startDay(k) { const m = S.months[k]; return m && m.startDay ? m.startDay : (S.startDay || 1); }
+function periodStart(k) { const [y, m] = k.split('-').map(Number); return k + '-' + pad(Math.min(startDay(k), daysIn(y, m))); }
+function periodEnd(k) { const d = new Date(periodStart(shiftMonth(k, 1)) + 'T12:00'); d.setDate(d.getDate() - 1); return iso(d); }
+function periodOf(date) { const k = date.slice(0, 7); return date < periodStart(k) ? shiftMonth(k, -1) : k; }
+function periodRange(k) {
+  const a = periodStart(k), b = periodEnd(k);
+  return +a.slice(8) + ' ' + MON_SHORT[+a.slice(5, 7) - 1] + ' – ' + +b.slice(8) + ' ' + MON_SHORT[+b.slice(5, 7) - 1] + ' ' + b.slice(0, 4);
+}
+const customPeriods = () => (S.startDay || 1) !== 1 || Object.values(S.months).some(m => m.startDay);
+// after a boundary changes, move dated operations into the period they now belong to
+function rebucket() {
+  let moved = 0;
+  for (const k of Object.keys(S.months)) {
+    const m = S.months[k];
+    m.tx = m.tx.filter(t => {
+      const p = t.date ? periodOf(t.date) : k;
+      if (p === k) return true;
+      ensureMonth(p).tx.push(t); moved++; return false;
+    });
+  }
+  return moved;
+}
+function setDefaultStartDay(n) {
+  // past periods keep their boundaries; the current and future ones switch to the new day
+  const now = periodOf(today());
+  for (const k in S.months) if (k < now && !S.months[k].startDay) S.months[k].startDay = S.startDay || 1;
+  S.startDay = n;
+  const moved = rebucket();
+  cur = periodOf(today()); save(); render();
+  toast('Месяц начинается с ' + n + ' числа' + (moved ? ` · перенесено операций: ${moved}` : ''));
+}
+function setPeriodStartDay(n) {
+  const m = curMonth();
+  if (n) m.startDay = n; else delete m.startDay;
+  const moved = rebucket(); save(); render();
+  toast('Период: ' + periodRange(cur) + (moved ? ` · перенесено операций: ${moved}` : ''));
+}
+
 // ---------- ui state ----------
-let cur = today().slice(0, 7);
+let cur = periodOf(today());
 let tab = 'overview';
 let txFilter = 'all';
 let imp = null;
@@ -279,7 +324,7 @@ function render() {
   const empty = !Object.keys(S.months).length;
   $('#top').innerHTML = tab === 'settings' || empty
     ? `<div class="mtitle">${tab === 'settings' ? 'Ещё' : 'Бюджет'}</div>`
-    : `<button class="icon" data-act="prev" aria-label="Предыдущий месяц">‹</button><div class="mtitle">${monthLabel(cur)}</div><button class="icon" data-act="next" aria-label="Следующий месяц">›</button>`;
+    : `<button class="icon" data-act="prev" aria-label="Предыдущий месяц">‹</button><div class="mtitle">${monthLabel(cur)}${customPeriods() ? `<small>${periodRange(cur)}</small>` : ''}</div><button class="icon" data-act="next" aria-label="Следующий месяц">›</button>`;
   $('#view').innerHTML = tab === 'settings' ? vSettings() : empty ? vWelcome() : ({overview: vOverview, plan: vPlan, tx: vTx})[tab]();
 }
 
@@ -349,7 +394,16 @@ function vOverview() {
 function vPlan() {
   const m = S.months[cur]; if (!m) return noMonth();
   const r = calc(m);
+  const days = Array.from({length: 31}, (_, i) => i + 1);
   let h = `<section class="card">
+    <div class="row"><span class="muted">Период</span><b>${periodRange(cur)}</b></div>
+    <label>Начало этого периода<select data-pstart>
+      <option value="">как в настройках (${S.startDay || 1} число)</option>
+      ${days.map(d => `<option value="${d}" ${m.startDay === d ? 'selected' : ''}>${d} ${MONTHS_GEN[+cur.slice(5) - 1]}</option>`).join('')}
+    </select></label>
+    <p class="hint">Например, зарплата пришла 19-го, а не 20-го: поставьте 19. Прошлый период тогда закончится 18-го, операции переедут сами.</p>
+  </section>
+  <section class="card">
     <label style="margin:0">Доход за месяц<input type="text" inputmode="decimal" data-f="income" value="${m.income ?? ''}" placeholder="авто: ${nf.format(r.incomeTx)}"></label>
     <p class="hint">Если оставить пустым, доход посчитается по поступлениям из операций.</p>
   </section>
@@ -427,7 +481,8 @@ function txList(m, list) {
   }
   return h + (open ? '</div>' : '');
 }
-function fmtDate(d) { const [y, m, dd] = d.split('-'); return +dd + ' ' + ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'][+m - 1] + ' ' + y; }
+const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+function fmtDate(d) { const [y, m, dd] = d.split('-'); return +dd + ' ' + MONTHS_GEN[+m - 1] + ' ' + y; }
 function plural(n, a, b, c) { const k = n % 100, j = n % 10; return k > 10 && k < 20 ? c : j === 1 ? a : j >= 2 && j <= 4 ? b : c; }
 
 function vSettings() {
@@ -437,6 +492,12 @@ function vSettings() {
     <p class="hint">Последняя: ${S.lastBackup ? new Date(S.lastBackup).toLocaleString('ru-RU') : 'ещё не делалась'}.
     Сохраните файл в «Файлы» / iCloud Drive или отправьте себе в мессенджер.</p>
     <div class="btns"><button class="btn" data-act="backup">Сделать копию</button><button class="btn ghost" data-act="restore">Восстановить</button></div>
+  </section>
+  <section class="card"><label style="margin:0">Бюджетный месяц начинается с числа<select data-startday>
+      ${Array.from({length: 31}, (_, i) => i + 1).map(d => `<option value="${d}" ${(S.startDay || 1) === d ? 'selected' : ''}>${d}${d === 1 ? ' (календарный месяц)' : ''}</option>`).join('')}
+    </select></label>
+    <p class="hint">Например, 20 — если зарплата приходит 20-го: тогда «Октябрь» — это 20 октября – 19 ноября.
+    Меняет текущий и будущие периоды, прошлые остаются как были. Для одного месяца дату можно сдвинуть во вкладке «План».</p>
   </section>
   <section class="card"><label style="margin:0">Валюта<input data-f="currency" value="${esc(S.currency)}" placeholder="Br"></label></section>
   ${aliases.length ? `<section class="card"><b>Соответствия категорий Qalta</b>
@@ -497,7 +558,7 @@ function subOpts(m, catName, sel) {
 
 function openTx(id) {
   const m = id ? S.months[cur] : ensureMonth(cur);
-  const t = id ? m.tx.find(x => x.id === id) : {date: cur === today().slice(0, 7) ? today() : cur + '-01', cat: '', amount: 0, note: ''};
+  const t = id ? m.tx.find(x => x.id === id) : {date: periodOf(today()) === cur ? today() : periodStart(cur), cat: '', amount: 0, note: ''};
   if (!t) return;
   const match = findCat(m, t.cat);
   const opts = [`<option value="">Без категории</option>`]
@@ -644,7 +705,7 @@ function renderImpSummary() {
   const {items, skipped} = buildItems();
   const months = new Map(), unknown = new Set();
   for (const it of items) {
-    const k = it.date ? it.date.slice(0, 7) : null; months.set(k, (months.get(k) || 0) + 1);
+    const k = it.date ? periodOf(it.date) : null; months.set(k, (months.get(k) || 0) + 1);
     const m = S.months[k || imp.target] || S.months[sourceMonth(k || imp.target)] ;
     if (it.amount < 0 && (!m || !findCat(m, it.cat))) unknown.add(it.cat || 'без категории');
   }
@@ -664,7 +725,7 @@ function doImport() {
   const {items} = buildItems();
   if (!items.length) { toast('Нечего импортировать'); return; }
   const groups = new Map();
-  for (const it of items) { const k = it.date ? it.date.slice(0, 7) : imp.target; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
+  for (const it of items) { const k = it.date ? periodOf(it.date) : imp.target; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(it); }
   let added = 0, dup = 0;
   const key = t => t.extId ? 'id:' + t.extId : [t.date || '', norm(t.cat), norm(t.sub), t.amount, norm(t.note)].join('|');
   for (const [k, list] of groups) {
@@ -708,6 +769,7 @@ async function restoreFrom(file) {
     for (const m of Object.values(S.months)) { m.cats = m.cats || []; m.tx = m.tx || []; m.cats.forEach(c => c.subs = c.subs || []); }
     save();
     const ks = Object.keys(S.months).sort();
+    cur = periodOf(today());
     if (!S.months[cur] && ks.length) cur = ks[ks.length - 1];
     tab = 'overview'; render(); toast('Данные восстановлены');
   } catch (e) { toast('Не удалось прочитать файл: ' + e.message); }
@@ -781,7 +843,7 @@ const ACT = {
     const id = el.dataset.id, inc = document.querySelector('input[name=kind]:checked').value === 'inc';
     const a = Math.abs(num($('#fAmt').value));
     if (!a) { toast('Введите сумму'); return; }
-    const date = $('#fDate').value || null, target = date ? date.slice(0, 7) : cur;
+    const date = $('#fDate').value || null, target = date ? periodOf(date) : cur;
     let t = {id: uid(), src: 'manual'};
     if (id) { const m = curMonth(); t = m.tx.find(x => x.id === id); m.tx = m.tx.filter(x => x.id !== id); }
     Object.assign(t, {date, cat: $('#fCat').value, sub: $('#fSub').value, amount: inc ? a : -a, note: $('#fNote').value.trim()});
@@ -834,6 +896,8 @@ document.addEventListener('change', e => {
     }
     catOf(el).name = nw; el.dataset.orig = nw; save();
   } else if (el.dataset.f === 'currency') { save(); }
+  else if ('startday' in el.dataset) setDefaultStartDay(+el.value);
+  else if ('pstart' in el.dataset) setPeriodStartDay(+el.value || 0);
   else if (el.id === 'fCat') { $('#fSub').innerHTML = subOpts(curMonth(), el.value, ''); }
   else if ('txfilter' in el.dataset) { txFilter = el.value; render(); }
   else if ('un' in el.dataset && el.value) {
