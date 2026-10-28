@@ -310,6 +310,7 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 <script>
 'use strict';
 const KEY = 'budget-app-v1';
+const APP_VERSION = 15;   // keep in step with VERSION in sw.js
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -995,10 +996,16 @@ function vMore() {
     <label>Валюта<input data-currency value="${esc(S.currency)}" placeholder="Br"></label>
     <button class="row" style="width:100%;margin-top:14px" data-act="hapticsToggle"><span>Вибрация при касаниях<br><small class="muted">на iPhone с iOS 18 и новее</small></span>
       <span class="chk ${S.haptics === false ? '' : 'on'}">✓</span></button>
+    ${S.haptics === false ? '' : `<details style="margin-top:6px"><summary>Проверка вибрации</summary>
+      <p class="hint">Нажимайте по очереди. Вариант, на котором почувствуете «тик», запомнится и будет работать везде.
+      Если ни один не тикает — проверьте «Настройки → Звуки, тактильные сигналы → Системные тактильные сигналы».</p>
+      ${Object.entries(HAPTIC_MODES).map(([m, l]) => `<button class="row" style="width:100%;padding:10px 0" data-act="hapticTest" data-m="${m}">
+        <span>${m.toUpperCase()}. ${l}</span><span class="chk ${(S.hapticMode || 'c') === m ? 'on' : ''}">✓</span></button>`).join('')}</details>`}
   </section>
   <section class="card"><b>Как установить на iPhone</b>
     <ol class="steps"><li>Откройте страницу в Safari.</li><li>«Поделиться» → «На экран „Домой“».</li><li>Открывайте приложение только с иконки — без интернета тоже работает.</li></ol></section>
-  <div class="btns" style="margin-bottom:20px"><button class="btn danger" data-act="wipe">Удалить все данные</button></div>`;
+  <div class="btns" style="margin-bottom:12px"><button class="btn danger" data-act="wipe">Удалить все данные</button></div>
+  <p class="hint" style="text-align:center;margin-bottom:20px">Версия ${APP_VERSION}</p>`;
 }
 
 function vCats() {
@@ -1626,19 +1633,30 @@ const TOKEN_STEPS = `<ol class="steps">
   <li><b>Generate token</b> → скопируйте ключ (начинается с <b>ghp_</b>) и вставьте ниже.</li></ol>`;
 
 // ---------- haptics ----------
-// Android: the Vibration API. iPhone has none for web apps; on iOS 18+ toggling a hidden
-// <input switch> gives the system "tick" — an unofficial trick that may stop working one day.
-let hapticEl = null;
+// Android: the Vibration API. iPhone has none for web apps; toggling an <input switch> gives the
+// system "tick" — an unofficial trick, so there are several variants and the user picks the one that works.
+const HAPTIC_MODES = {
+  a: 'Скрытый переключатель',
+  b: 'Скрытый переключатель (вариант 2)',
+  c: 'Невидимый переключатель',
+  d: 'Невидимый переключатель, прямое нажатие'
+};
+function hapticVia(mode) {
+  const label = document.createElement('label'), input = document.createElement('input');
+  label.setAttribute('aria-hidden', 'true');
+  input.type = 'checkbox'; input.setAttribute('switch', ''); input.dataset.haptic = '1';
+  label.appendChild(input);
+  if (mode === 'a' || mode === 'b') label.style.display = 'none';
+  else label.style.cssText = 'position:fixed;left:0;bottom:0;width:30px;height:20px;opacity:.01;overflow:hidden;z-index:-1';
+  (mode === 'b' ? document.head : document.body).appendChild(label);
+  if (mode === 'd') input.click(); else label.click();
+  label.remove();
+}
 function haptic() {
   if (S.haptics === false) return;
   try {
     if (navigator.vibrate) { navigator.vibrate(8); return; }
-    if (!hapticEl) {
-      hapticEl = document.createElement('label'); hapticEl.setAttribute('aria-hidden', 'true'); hapticEl.style.display = 'none';
-      const input = document.createElement('input'); input.type = 'checkbox'; input.setAttribute('switch', ''); input.dataset.haptic = '1';
-      hapticEl.appendChild(input); document.body.appendChild(hapticEl);
-    }
-    hapticEl.click();
+    hapticVia(S.hapticMode || 'c');
   } catch (e) {}
 }
 // buttons that tick when pressed
@@ -1844,6 +1862,13 @@ const ACT = {
   // analytics
   anaType: el => { anaType = el.dataset.v; anaOff.clear(); anaSel = null; render(); },
   hapticsToggle: () => { S.haptics = S.haptics === false; save(); render(); haptic(); },
+  // fire the variant right inside the tap, then remember it (the open <details> survives because we don't re-render)
+  hapticTest: el => {
+    const m = el.dataset.m;
+    try { hapticVia(m); } catch (e) {}
+    S.hapticMode = m; save();
+    for (const b of document.querySelectorAll('[data-act=hapticTest] .chk')) b.classList.toggle('on', b.closest('button').dataset.m === m);
+  },
   anaToggle: el => { const id = el.dataset.id; anaOff.has(id) ? anaOff.delete(id) : anaOff.add(id); render(); },
   anaAll: () => {
     const [a, b] = rangeOf('ana'), ids = anaCalc(a, b).map(([id]) => id);
