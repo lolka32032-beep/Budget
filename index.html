@@ -144,7 +144,16 @@ main{max-width:640px;margin:0 auto}
 .pen svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 
 /* analytics */
-.donut{display:block;width:100%;max-width:330px;margin:0 auto 8px}
+.donut{display:block;width:100%}
+.dwrap{position:relative;max-width:330px;margin:0 auto 8px}
+.dcenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:41%;text-align:center;pointer-events:none;line-height:1.2}
+.dcenter .dc1{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dcenter .dc2{font-size:22px;font-weight:600;margin:3px 0;white-space:nowrap}
+.dcenter .dc3{font-size:11px}
+/* the Belarusian ruble sign, drawn and coloured like the text around it */
+.byn{display:inline-block;width:.6em;height:.74em;vertical-align:-.04em;background:currentColor;
+  -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='176 58 399 495'%3E%3Crect x='247' y='58' width='55' height='495'/%3E%3Crect x='247' y='58' width='273' height='55'/%3E%3Crect x='176' y='380' width='250' height='55'/%3E%3Cpath fill-rule='evenodd' d='M290 263H425A150 145 0 0 1 425 553H290ZM290 318H425A95 90 0 0 1 425 498H290Z'/%3E%3C/svg%3E") center/contain no-repeat;
+  mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='176 58 399 495'%3E%3Crect x='247' y='58' width='55' height='495'/%3E%3Crect x='247' y='58' width='273' height='55'/%3E%3Crect x='176' y='380' width='250' height='55'/%3E%3Cpath fill-rule='evenodd' d='M290 263H425A150 145 0 0 1 425 553H290ZM290 318H425A95 90 0 0 1 425 498H290Z'/%3E%3C/svg%3E") center/contain no-repeat}
 .donut text{fill:var(--text);pointer-events:none}
 .donut .dseg{transition:transform .18s ease,opacity .18s ease}
 .donut .dseg.dim,.donut path.dim{opacity:.3}
@@ -310,7 +319,7 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 <script>
 'use strict';
 const KEY = 'budget-app-v1';
-const APP_VERSION = 15;   // keep in step with VERSION in sw.js
+const APP_VERSION = 17;   // keep in step with VERSION in sw.js
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -338,7 +347,9 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt
 const norm = s => String(s ?? '').trim().toLowerCase().replace(/ё/g, 'е').replace(/\s+/g, ' ');
 const nf = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2});
 const round2 = n => Math.round(n * 100) / 100;
-const money = n => nf.format(round2(n || 0)) + (S.currency ? ' ' + S.currency : '');
+// currency after the number: the drawn Belarusian ruble sign by default, or the text from settings. Returns HTML.
+const curHtml = () => S.currencySign !== false ? '<i class="byn" role="img" aria-label="BYN"></i>' : (S.currency ? esc(S.currency) : '');
+const money = n => { const c = curHtml(); return nf.format(round2(n || 0)) + (c ? '&nbsp;' + c : ''); };
 const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n));
 const num = v => { const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
 const pad = n => String(n).padStart(2, '0');
@@ -820,7 +831,7 @@ function donut(rows, total) {
       ang += span;
     }
   } else svg += `<circle cx="150" cy="150" r="90" fill="none" stroke="var(--track)" stroke-width="44"/>`;
-  return svg + `<g id="dcenter">${donutCenter()}</g></svg>`;
+  return `<div class="dwrap">${svg}</svg><div id="dcenter" class="dcenter">${donutCenter()}</div></div>`;
 }
 function selSeg() {
   if (!anaSel || !DONUT) return null;
@@ -831,13 +842,11 @@ function selSeg() {
 }
 function donutCenter() {
   const s = selSeg(), total = DONUT ? DONUT.total : 0;
-  if (!s) return `<text x="150" y="140" text-anchor="middle" font-size="14" fill-opacity=".6">Итого</text>
-    <text x="150" y="168" text-anchor="middle" font-size="26" font-weight="600">${esc(money(total))}</text>`;
+  // the centre is HTML laid over the chart (so the drawn currency sign can be used)
+  if (!s) return `<div class="dc1 muted">Итого</div><div class="dc2 num">${money(total)}</div>`;
   const info = s.sub ? subInfo(s.seg.cid, s.sub.sid) : catInfo(s.seg.cid), v = s.sub ? s.sub.v : s.seg.v;
-  const name = info.name.length > 16 ? info.name.slice(0, 15) + '…' : info.name;
-  return `<text x="150" y="126" text-anchor="middle" font-size="15">${esc(info.icon + ' ' + name)}</text>
-    <text x="150" y="156" text-anchor="middle" font-size="26" font-weight="600">${esc(money(v))}</text>
-    <text x="150" y="178" text-anchor="middle" font-size="13" fill-opacity=".6">${total ? Math.round(v / total * 100) : 0}% · ещё раз ›</text>`;
+  return `<div class="dc1">${esc(info.icon + ' ' + info.name)}</div><div class="dc2 num">${money(v)}</div>
+    <div class="dc3 muted">${total ? Math.round(v / total * 100) : 0}% · ещё раз ›</div>`;
 }
 // update highlight without re-rendering the screen
 function paintDonut() {
@@ -853,7 +862,7 @@ function paintDonut() {
 }
 function selectSlice(cid, sid) {
   if (anaSel && anaSel.cid === cid && anaSel.sid === sid) return;
-  anaSel = {cid, sid}; paintDonut(); haptic();
+  anaSel = {cid, sid}; paintDonut();
 }
 function donutHit(x, y) {
   const svg = $('#donut'); if (!svg || !DONUT) return null;
@@ -870,9 +879,9 @@ document.addEventListener('click', e => {
   if (!e.target.closest || !e.target.closest('#donut')) return;
   if (donutDragged) { donutDragged = false; return; }
   const p = e.target.closest('path.seg');
-  if (!p) { if (anaSel) { anaSel = null; paintDonut(); haptic(); } return; }
+  if (!p) { if (anaSel) { anaSel = null; paintDonut(); } return; }
   const cid = p.dataset.cid, sid = p.dataset.sid || '';
-  if (anaSel && anaSel.cid === cid && anaSel.sid === sid) { haptic(); sheetAnaCat(cid, sid); return; }
+  if (anaSel && anaSel.cid === cid && anaSel.sid === sid) { sheetAnaCat(cid, sid); return; }
   selectSlice(cid, sid);
 });
 document.addEventListener('touchstart', e => {
@@ -993,17 +1002,10 @@ function vMore() {
       ${Array.from({length: 31}, (_, i) => i + 1).map(d => `<option value="${d}" ${(S.startDay || 1) === d ? 'selected' : ''}>${d}${d === 1 ? ' (календарный месяц)' : ''}</option>`).join('')}
     </select></label>
     <p class="hint">Например, 20 — если зарплата приходит 20-го: «Октябрь» — это 20 октября – 19 ноября. Меняет текущий и будущие периоды, прошлые остаются как были.</p>
-    <label>Валюта<input data-currency value="${esc(S.currency)}" placeholder="Br"></label>
-    <button class="row" style="width:100%;margin-top:14px" data-act="hapticsToggle"><span>Вибрация при касаниях<br><small class="muted">на iPhone с iOS 18 и новее</small></span>
-      <span class="chk ${S.haptics === false ? '' : 'on'}">✓</span></button>
-    ${S.haptics === false ? '' : `<details style="margin-top:6px"><summary>Проверка вибрации</summary>
-      <p class="hint">Нажимайте по очереди. Вариант, на котором почувствуете «тик», запомнится и будет работать везде.
-      Если ни один не тикает — проверьте «Настройки → Звуки, тактильные сигналы → Системные тактильные сигналы».</p>
-      ${Object.entries(HAPTIC_MODES).map(([m, l]) => `<button class="row" style="width:100%;padding:10px 0" data-act="hapticTest" data-m="${m}">
-        <span>${m.toUpperCase()}. ${l}</span><span class="chk ${(S.hapticMode || 'c') === m ? 'on' : ''}">✓</span></button>`).join('')}</details>`}
+    <button class="row" style="width:100%;margin-top:14px" data-act="curSign"><span>Валюта: знак бел. рубля <i class="byn"></i></span>
+      <span class="chk ${S.currencySign !== false ? 'on' : ''}">✓</span></button>
+    ${S.currencySign === false ? `<label>Валюта текстом<input data-currency value="${esc(S.currency)}" placeholder="Br"></label>` : ''}
   </section>
-  <section class="card"><b>Как установить на iPhone</b>
-    <ol class="steps"><li>Откройте страницу в Safari.</li><li>«Поделиться» → «На экран „Домой“».</li><li>Открывайте приложение только с иконки — без интернета тоже работает.</li></ol></section>
   <div class="btns" style="margin-bottom:12px"><button class="btn danger" data-act="wipe">Удалить все данные</button></div>
   <p class="hint" style="text-align:center;margin-bottom:20px">Версия ${APP_VERSION}</p>`;
 }
@@ -1053,7 +1055,6 @@ function requestClose(animated) {
   const el = $('.sheet');
   if (sheetForm && sheetDirty && !confirm('Закрыть без сохранения?')) { el.style.transition = 'transform .2s ease'; el.style.transform = ''; return; }
   if (!animated) { closeSheet(); return; }
-  haptic();
   el.style.transition = 'transform .2s ease'; el.style.transform = 'translateY(100%)';
   setTimeout(closeSheet, 200);
 }
@@ -1227,7 +1228,7 @@ function addAmountHtml(to) {
   const v = round2(evalExpr(A.expr)), hasOp = /[+−×÷]/.test(A.expr);
   const color = to || A.type === 'income' || (A.type === 'expense' && A.refund) ? 'var(--inc)' : 'var(--text)';
   return `<div class="expr">${hasOp && !to ? esc(A.expr) : ''}</div>
-    <div class="val num" style="color:${color};${to && !v ? 'opacity:.35' : ''}">${esc(nf.format(v))} ${esc(S.currency)}</div>`;
+    <div class="val num" style="color:${color};${to && !v ? 'opacity:.35' : ''}">${money(v)}</div>`;
 }
 function refreshAmounts() {
   $('#addAmt').innerHTML = addAmountHtml();
@@ -1303,7 +1304,7 @@ $('#add').addEventListener('touchmove', e => {
   e.preventDefault();
   const d = new Date(dsw.base + 'T12:00'); d.setDate(d.getDate() - Math.trunc(dx / DAY_STEP));
   dsw.date = iso(d) > today() ? today() : iso(d);
-  if ($('#dateLbl').textContent !== dateLabel(dsw.date)) { $('#dateLbl').textContent = dateLabel(dsw.date); haptic(); }
+  $('#dateLbl').textContent = dateLabel(dsw.date);
 }, {passive: false});
 const dateSwipeEnd = e => {
   if (!dsw) return;
@@ -1340,7 +1341,7 @@ function saveTx() {
   else S.tx.push(Object.assign({id: uid(), src: 'manual', created: Date.now()}, t));
   S.lastAcc = A.acc;
   const edited = !!A.id;
-  haptic(); save(); closeAdd(); render(); toast(edited ? 'Изменено' : 'Сохранено');
+  save(); closeAdd(); render(); toast(edited ? 'Изменено' : 'Сохранено');
 }
 
 // ---------- CSV import ----------
@@ -1624,43 +1625,13 @@ function cloudCard() {
   return `<section class="card"><b>☁️ Автокопия в облако включена</b>
     <p class="hint">${c.last ? 'Последняя копия: ' + fmtWhen(c.last) : 'Копий ещё не было'}${c.error ? `<br><span class="neg">Ошибка: ${esc(c.error)}</span>` : ''}</p>
     <div class="btns"><button class="btn" data-act="cloudNow">Отправить сейчас</button><button class="btn ghost" data-act="cloudRestoreForm">Восстановить</button></div>
-    <div class="btns" style="margin-top:8px"><button class="btn small ghost" data-act="cloudOff" style="flex:none">Отключить</button></div></section>`;
+    <div class="btns" style="margin-top:10px"><button class="btn danger" data-act="cloudOff">Отключить автокопию</button></div></section>`;
 }
 const TOKEN_STEPS = `<ol class="steps">
   <li>На github.com: фото профиля → <b>Settings</b> → внизу слева <b>Developer settings</b>.</li>
   <li><b>Personal access tokens</b> → <b>Tokens (classic)</b> → <b>Generate new token (classic)</b>.</li>
   <li>Note: «Бюджет», Expiration: <b>No expiration</b>, отметьте только галочку <b>gist</b>.</li>
   <li><b>Generate token</b> → скопируйте ключ (начинается с <b>ghp_</b>) и вставьте ниже.</li></ol>`;
-
-// ---------- haptics ----------
-// Android: the Vibration API. iPhone has none for web apps; toggling an <input switch> gives the
-// system "tick" — an unofficial trick, so there are several variants and the user picks the one that works.
-const HAPTIC_MODES = {
-  a: 'Скрытый переключатель',
-  b: 'Скрытый переключатель (вариант 2)',
-  c: 'Невидимый переключатель',
-  d: 'Невидимый переключатель, прямое нажатие'
-};
-function hapticVia(mode) {
-  const label = document.createElement('label'), input = document.createElement('input');
-  label.setAttribute('aria-hidden', 'true');
-  input.type = 'checkbox'; input.setAttribute('switch', ''); input.dataset.haptic = '1';
-  label.appendChild(input);
-  if (mode === 'a' || mode === 'b') label.style.display = 'none';
-  else label.style.cssText = 'position:fixed;left:0;bottom:0;width:30px;height:20px;opacity:.01;overflow:hidden;z-index:-1';
-  (mode === 'b' ? document.head : document.body).appendChild(label);
-  if (mode === 'd') input.click(); else label.click();
-  label.remove();
-}
-function haptic() {
-  if (S.haptics === false) return;
-  try {
-    if (navigator.vibrate) { navigator.vibrate(8); return; }
-    hapticVia(S.hapticMode || 'c');
-  } catch (e) {}
-}
-// buttons that tick when pressed
-const HAPTIC_ACTS = new Set(['key', 'swapAcc', 'pickCat', 'pickSub', 'pickCatS', 'pickSubS', 'anaToggle', 'anaAll', 'anaType', 'addType', 'setAcc', 'toggleBudAcc']);
 
 // ---------- toast ----------
 let toastTimer;
@@ -1673,8 +1644,8 @@ function dragTo(y) {
   const {item, list} = drag;
   const sibs = [...list.children].filter(x => x !== item && x.dataset.sortId);
   const before = sibs.find(s => { const r = s.getBoundingClientRect(); return y < r.top + r.height / 2; });
-  if (before) { if (item.nextElementSibling !== before) { list.insertBefore(item, before); haptic(); } }
-  else if (sibs.length && sibs[sibs.length - 1].nextElementSibling !== item) { sibs[sibs.length - 1].after(item); haptic(); }
+  if (before) { if (item.nextElementSibling !== before) list.insertBefore(item, before); }
+  else if (sibs.length && sibs[sibs.length - 1].nextElementSibling !== item) sibs[sibs.length - 1].after(item);
 }
 function dragLoop() {
   if (!drag) return;
@@ -1703,7 +1674,7 @@ document.addEventListener('pointerdown', e => {
   e.preventDefault();
   try { h.setPointerCapture(e.pointerId); } catch (err) {}
   drag = {item, list, y: e.clientY};
-  item.classList.add('dragging'); document.body.classList.add('nosel'); haptic();
+  item.classList.add('dragging'); document.body.classList.add('nosel');
   drag.raf = requestAnimationFrame(dragLoop);
 });
 document.addEventListener('pointermove', e => { if (drag) { e.preventDefault(); drag.y = e.clientY; } }, {passive: false});
@@ -1861,14 +1832,7 @@ const ACT = {
   },
   // analytics
   anaType: el => { anaType = el.dataset.v; anaOff.clear(); anaSel = null; render(); },
-  hapticsToggle: () => { S.haptics = S.haptics === false; save(); render(); haptic(); },
-  // fire the variant right inside the tap, then remember it (the open <details> survives because we don't re-render)
-  hapticTest: el => {
-    const m = el.dataset.m;
-    try { hapticVia(m); } catch (e) {}
-    S.hapticMode = m; save();
-    for (const b of document.querySelectorAll('[data-act=hapticTest] .chk')) b.classList.toggle('on', b.closest('button').dataset.m === m);
-  },
+  curSign: () => { S.currencySign = S.currencySign === false; if (!S.currency) S.currency = 'Br'; save(); render(); },
   anaToggle: el => { const id = el.dataset.id; anaOff.has(id) ? anaOff.delete(id) : anaOff.add(id); render(); },
   anaAll: () => {
     const [a, b] = rangeOf('ana'), ids = anaCalc(a, b).map(([id]) => id);
@@ -1941,12 +1905,12 @@ const ACT = {
   pickSubS: el => { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
   key: el => pressKey(el.dataset.k),
   saveTx: () => saveTx(),
-  delTx: () => { if (!confirm('Удалить операцию?')) return; haptic(); S.tx = S.tx.filter(t => t.id !== A.id); save(); closeAdd(); render(); toast('Удалено'); }
+  delTx: () => { if (!confirm('Удалить операцию?')) return; S.tx = S.tx.filter(t => t.id !== A.id); save(); closeAdd(); render(); toast('Удалено'); }
 };
 
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
-  const fn = ACT[el.dataset.act]; if (fn) { e.preventDefault(); if (HAPTIC_ACTS.has(el.dataset.act)) haptic(); fn(el, e); }
+  const fn = ACT[el.dataset.act]; if (fn) { e.preventDefault(); fn(el, e); }
 });
 
 // typing: update state in place without re-rendering, so the iPhone keyboard stays open
@@ -1959,7 +1923,7 @@ document.addEventListener('input', e => {
   if ('lim' in d) {
     const b = bmut(cur); b.limits[d.lim] = num(el.value);
     const card = el.closest('[data-cid]');
-    if (card) card.querySelector('[data-total]').textContent = money(catLimit(b.limits, CAT.get(card.dataset.cid)));
+    if (card) card.querySelector('[data-total]').innerHTML = money(catLimit(b.limits, CAT.get(card.dataset.cid)));
     if ($('#plansum')) $('#plansum').innerHTML = planSum(cur);
     const sheetCard = el.closest('[data-bcid]');
     if (sheetCard) { paintBudCat(sheetCard.dataset.bcid); budViewStale = true; }
