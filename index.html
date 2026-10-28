@@ -86,6 +86,18 @@ main{max-width:640px;margin:0 auto}
 /* tx list */
 .dhead{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);margin:16px 4px 6px}
 .tx{display:flex;width:100%;gap:12px;align-items:center;background:var(--card);border-radius:16px;padding:10px 12px;margin:0 0 6px}
+.swr{position:relative;margin:0 0 6px;border-radius:16px;overflow:hidden}
+.swr .tx{position:relative;z-index:1;margin:0;transition:transform .2s ease}
+.swr-act{position:absolute;top:0;bottom:0;width:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-size:12px;font-weight:600;color:#fff;text-align:center}
+.swr-act .i{font-size:20px;line-height:1}
+.swr-act.del{right:0;background:#ff3b30}.swr-act.rep{left:0;background:#34c759}
+.swr.far .swr-act{font-size:13px}
+#undo{position:fixed;left:16px;right:16px;bottom:calc(env(safe-area-inset-bottom) + 140px);z-index:40;max-width:480px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--text);color:var(--bg);border-radius:14px;padding:10px 10px 10px 16px;
+  font-size:14px;opacity:0;transform:translateY(20px);pointer-events:none;transition:.25s}
+#undo.on{opacity:1;transform:none;pointer-events:auto}
+#undo button{color:var(--accent);font-weight:700;padding:6px 10px;filter:brightness(.8)}
 .tx:active,.cat:active,.arow button:active{opacity:.7}
 .tx .t{flex:1;min-width:0}
 .tx b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -159,6 +171,15 @@ main{max-width:640px;margin:0 auto}
 .donut .dseg.dim,.donut path.dim{opacity:.3}
 .donut path.seg{cursor:pointer;transition:opacity .18s ease}
 .anarow.hl{outline:2px solid var(--accent);outline-offset:-2px}
+.trend{display:block;font-size:11px;font-weight:600}
+.trend.bad{color:var(--warn)}.trend.good{color:var(--ok)}
+.mbars{display:flex;gap:6px;align-items:flex-end;height:150px}
+.mb{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;height:100%;text-align:center}
+.mb .mv{font-size:10.5px;color:var(--muted);white-space:nowrap;min-height:13px}
+.mb .mbar{flex:1;width:70%;display:flex;align-items:flex-end;background:var(--track);border-radius:8px;overflow:hidden}
+.mb .mbar i{display:block;width:100%;background:color-mix(in srgb,var(--accent) 45%,transparent);border-radius:8px}
+.mb.on .mbar i{background:var(--accent)}
+.mb .ml{font-size:12px;color:var(--muted)}.mb.on .ml{color:var(--text);font-weight:600}
 .chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--muted);flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:transparent}
 .chk.on{background:var(--text);border-color:var(--text);color:var(--bg)}
 .anarow{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:8px 12px 8px 8px;margin:0 0 6px}
@@ -333,13 +354,14 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
   <button class="sheet-x" data-act="closeX" aria-label="Закрыть">✕</button></div><div id="sheetBody"></div></div></div>
 <div id="add" class="add-wrap" hidden></div>
 <div id="toast" role="status"></div>
+<div id="undo" role="status"><span></span><button>Отменить</button></div>
 <input type="file" id="fileCsv" accept=".csv,.tsv,.txt,text/csv,text/plain,text/comma-separated-values" hidden>
 <input type="file" id="fileBackup" accept=".json,application/json" hidden>
 
 <script>
 'use strict';
 const KEY = 'budget-app-v1';
-const APP_VERSION = 18;   // keep in step with VERSION in sw.js
+const APP_VERSION = 19;   // keep in step with VERSION in sw.js
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -734,9 +756,13 @@ function txList(list, accId, limit) {
   for (const t of shown) {
     if (t.date !== last) { h += `<div class="dhead"><span>${fmtDay(t.date)}</span><span class="num">${signed(sums.get(t.date) || 0, accId ? curOf(accId) : 'BYN')}</span></div>`; last = t.date; }
     const v = txView(t, accId);
-    h += `<button class="tx" data-act="edit" data-id="${t.id}">${icon(v.ic, v.color)}
+    // swipe left: delete, swipe right: repeat (the buttons sit under the row)
+    h += `<div class="swr" data-id="${t.id}">
+      <button class="swr-act rep" data-act="swRepeat" data-id="${t.id}"><span class="i">↻</span>Повторить</button>
+      <button class="swr-act del" data-act="swDelete" data-id="${t.id}"><span class="i">🗑</span>Удалить</button>
+      <button class="tx" data-act="edit" data-id="${t.id}">${icon(v.ic, v.color)}
       <span class="t"><b>${esc(v.title)}</b>${v.subt ? `<small>${esc(v.subt)}</small>` : ''}</span>
-      <span class="amt num ${v.cls}">${v.shown}</span></button>`;
+      <span class="amt num ${v.cls}">${v.shown}</span></button></div>`;
   }
   if (limit && sorted.length > limit) h += `<button class="more" data-act="showMore">Показать ещё (${sorted.length - limit})</button>`;
   return h;
@@ -936,6 +962,7 @@ function paintDonut() {
     for (const p of g.querySelectorAll('path.sub')) p.classList.toggle('dim', !!(on && s.sub && p.dataset.sid !== s.sub.sid));
   }
   const c = $('#dcenter'); if (c) c.innerHTML = donutCenter();
+  const m = $('#mcmp'); if (m) m.innerHTML = monthsHtml();
   for (const r of document.querySelectorAll('.anarow[data-row]')) r.classList.toggle('hl', !!s && r.dataset.row === s.seg.cid);
 }
 function selectSlice(cid, sid) {
@@ -985,17 +1012,63 @@ function vAnalytics() {
   let h = `<div class="hdr">${accChip('ana', anaAcc)}</div>
     ${incExpSeg('anaType', anaType)}
     ${periodBar('ana')}${donut(rows, total)}`;
-  if (!rows.length) return h + `<div class="empty"><p>За этот период операций нет</p></div>`;
+  if (!rows.length) return h + `<div class="empty"><p>За этот период операций нет</p></div><h3>По месяцам</h3><div class="card" id="mcmp">${monthsHtml()}</div>`;
   const allOn = rows.every(([id]) => !anaOff.has(id));
+  // in a budget period: how each category compares with its average over the 3 previous periods
+  const prevAvg = VIEW.ana.mode === 'period' ? avgByCat([1, 2, 3].map(i => shiftMonth(cur, -i))) : null;
   h += `<div class="anarow"><span class="nmb" style="flex:1;padding-left:6px;font-weight:600">Все категории</span><span class="num">${money(total, anaCur())}</span>
     <button class="chk ${allOn ? 'on' : ''}" data-act="anaAll" aria-label="Включить или выключить все категории">✓</button></div>`;
   for (const [id, g] of rows) {
     const c = catInfo(id), off = anaOff.has(id);
     h += `<div class="anarow ${off ? 'off' : ''} ${anaSel && anaSel.cid === id && !off ? 'hl' : ''}" data-row="${id}"><button class="nmb" data-act="anaOpen" data-id="${id}">${icon(c.icon, c.color, 'sm')}<span>${esc(c.name)}</span>
-      <span class="num" style="margin-left:auto;font-weight:500">${money(g.total, anaCur())}</span></button>
+      <span class="num" style="margin-left:auto;font-weight:500;text-align:right">${money(g.total, anaCur())}${prevAvg ? trendHtml(g.total, prevAvg.get(id) || 0) : ''}</span></button>
       <button class="chk ${off ? '' : 'on'}" data-act="anaToggle" data-id="${id}" aria-label="Учитывать">✓</button></div>`;
   }
-  return h;
+  return h + `<h3>По месяцам</h3><div class="card" id="mcmp">${monthsHtml()}</div>`;
+}
+// ---------- comparing months ----------
+// totals per category for the given budget periods, averaged (periods with no spending count as zero)
+function avgByCat(keys) {
+  const sum = new Map();
+  for (const k of keys) for (const [id, g] of anaCalc(periodStart(k), periodEnd(k))) sum.set(id, (sum.get(id) || 0) + g.total);
+  for (const [id, v] of sum) sum.set(id, v / keys.length);
+  return sum;
+}
+// "▲ 18%" next to a category: up is bad for spending, good for income
+function trendHtml(v, avg) {
+  if (avg < 0.5 || Math.abs(v - avg) / avg < 0.05) return '';
+  const p = Math.round((v - avg) / avg * 100), up = p > 0, bad = anaType === 'expense' ? up : !up;
+  return `<small class="trend ${bad ? 'bad' : 'good'}">${up ? '▲' : '▼'} ${Math.abs(p)}% к среднему</small>`;
+}
+// the last 6 budget periods as bars: everything shown, or the category/subcategory picked on the chart
+function monthsHtml() {
+  const end = VIEW.ana.mode === 'period' ? cur : periodOf(today());
+  const keys = [5, 4, 3, 2, 1, 0].map(i => shiftMonth(end, -i));
+  const s = selSeg();
+  const pick = (rows) => {
+    let v = 0;
+    for (const [id, g] of rows) {
+      if (anaOff.has(id)) continue;
+      if (s && id !== s.seg.cid) continue;
+      v += s && s.sub ? (g.subs.get(s.sub.sid) || 0) : g.total;
+    }
+    return v;
+  };
+  const vals = keys.map(k => ({k, v: pick(anaCalc(periodStart(k), periodEnd(k)))}));
+  const max = Math.max(...vals.map(x => x.v), 1);
+  const info = s ? (s.sub ? subInfo(s.seg.cid, s.sub.sid) : catInfo(s.seg.cid)) : null;
+  const last = vals[vals.length - 1].v, prev = vals.slice(0, -1).filter(x => x.v > 0);
+  const avg = prev.length ? prev.reduce((a, x) => a + x.v, 0) / prev.length : 0;
+  let note = '';
+  if (avg > 0) {
+    const p = Math.round((last - avg) / avg * 100);
+    note = `${MONTHS[+end.slice(5) - 1]}: ${money(last, anaCur())} — ${p === 0 ? 'как обычно' : `на ${Math.abs(p)}% ${p > 0 ? 'больше' : 'меньше'} среднего`} (${money(avg, anaCur())})`;
+  }
+  return `<div class="small" style="margin-bottom:8px">${info ? esc(info.icon + ' ' + info.name) : anaType === 'expense' ? 'Все расходы' : 'Все доходы'} · последние 6 месяцев</div>
+    <div class="mbars">${vals.map(x => `<button class="mb ${x.k === end ? 'on' : ''}" data-act="anaMonth" data-k="${x.k}">
+      <span class="mv num">${x.v ? nf.format(Math.round(x.v)) : ''}</span><span class="mbar"><i style="height:${Math.max(x.v ? 3 : 0, x.v / max * 100)}%"></i></span>
+      <span class="ml">${MON_SHORT[+x.k.slice(5) - 1]}</span></button>`).join('')}</div>
+    ${note ? `<p class="hint" style="margin-top:8px">${note}</p>` : ''}`;
 }
 
 function vBudget() {
@@ -1388,7 +1461,9 @@ function renderAdd() {
     : `<div class="amount" id="addAmt">${addAmountHtml()}</div>
       <div class="add-row">${accChipA('acc', A.acc)}${dateChip}</div>`}
     <div id="addCats">${addCatsHtml()}</div>
-    ${A.type === 'expense' ? `<label class="check" style="margin:0 0 8px 4px"><input type="checkbox" data-addf="refund" ${A.refund ? 'checked' : ''}> Возврат (деньги вернулись по этой категории)</label>` : ''}
+    ${A.type === 'expense' || A.type === 'income' ? `<div class="row" style="margin:0 0 8px 4px">
+      ${A.type === 'expense' ? `<label class="check" style="margin:0"><input type="checkbox" data-addf="refund" ${A.refund ? 'checked' : ''}> Возврат</label>` : '<span></span>'}
+      <button class="btn small ghost" data-act="split">✂ Разделить на категории</button></div>` : ''}
     <input class="note" data-addf="note" value="${esc(A.note)}" placeholder="Заметка">
     <div class="keys">${['1', '2', '3', '+', '4', '5', '6', '−', '7', '8', '9', '×', ',', '0', '⌫', '÷'].map(k =>
       `<button class="${/[+−×÷]/.test(k) ? 'op' : ''}" data-act="key" data-k="${k}">${k}</button>`).join('')}</div>
@@ -1434,6 +1509,57 @@ function pressKey(k) {
   else { if (/[+−×÷]$/.test(e)) e = e.slice(0, -1) + k; else if (e !== '0') e += k; }
   A[key] = e;
   refreshAmounts();
+}
+// ---------- split one purchase into several categories ----------
+// A.split: [{key: 'c:<cat id>' | 's:<sub id>', amt}]; the first row always takes the remainder
+const splitKey = (cat, sub) => sub ? 's:' + sub : cat ? 'c:' + cat : '';
+function splitRemainder() {
+  const total = round2(evalExpr(A.expr));
+  return round2(total - A.split.slice(1).reduce((s, r) => s + num(r.amt), 0));
+}
+function splitOptions(sel) {
+  return `<option value="">— категория —</option>` + S.cats.filter(c => c.type === A.type).map(c =>
+    `<option value="c:${c.id}" ${sel === 'c:' + c.id ? 'selected' : ''}>${esc(c.icon + ' ' + c.name)}</option>` +
+    c.subs.map(s => `<option value="s:${s.id}" ${sel === 's:' + s.id ? 'selected' : ''}>   ${esc(s.icon + ' ' + c.name + ' › ' + s.name)}</option>`).join('')).join('');
+}
+function sheetSplit() {
+  const total = round2(evalExpr(A.expr));
+  if (!(total > 0)) { toast('Сначала введите общую сумму чека'); return; }
+  if (!A.split) A.split = [{key: splitKey(A.cat, A.sub), amt: ''}, {key: '', amt: ''}];
+  const cur = curOf(A.acc), rest = splitRemainder();
+  openSheet(`<h2>✂ Разделить покупку</h2>
+    <div class="row small"><span>Сумма чека</span><b class="num" style="color:var(--text)">${money(total, cur)}</b></div>
+    <div class="card" style="margin-top:10px">${A.split.map((r, i) => `<div class="srow">
+      <select data-split="key" data-i="${i}" style="flex:1;min-width:0">${splitOptions(r.key)}</select>
+      <input class="amt" type="text" inputmode="decimal" data-split="amt" data-i="${i}" value="${i === 0 ? nf.format(rest) : esc(r.amt)}" placeholder="0" ${i === 0 ? 'readonly' : ''}>
+      ${i > 0 ? `<button class="x" data-act="splitDel" data-i="${i}" aria-label="Убрать">✕</button>` : '<span class="x"></span>'}</div>`).join('')}</div>
+    <p class="hint">В первую строку автоматически попадает остаток от суммы чека.</p>
+    <button class="btn ghost wide" style="margin-top:10px" data-act="splitAdd">+ ещё категория</button>
+    <div class="btns"><button class="btn" data-act="splitSave" id="splitSaveBtn">Сохранить ${A.split.length} ${plural(A.split.length, 'операцию', 'операции', 'операций')}</button></div>`, null, true);
+  paintSplit();
+}
+function paintSplit() {
+  const rest = splitRemainder(), first = $('[data-split="amt"][data-i="0"]');
+  if (first) { first.value = nf.format(rest); first.style.color = rest <= 0 ? 'var(--bad)' : ''; }
+}
+function saveSplit() {
+  const rest = splitRemainder();
+  if (rest <= 0) { toast('Части больше суммы чека — уменьшите их'); return; }
+  const parts = A.split.map((r, i) => ({key: r.key, amt: i === 0 ? rest : round2(num(r.amt))}));
+  if (parts.some(p => !p.key)) { toast('Выберите категорию в каждой строке'); return; }
+  if (parts.some(p => !(p.amt > 0))) { toast('Укажите сумму в каждой строке'); return; }
+  const now = Date.now();
+  parts.forEach((p, i) => {
+    const [kind, id] = p.key.split(':'), sub = kind === 's' ? id : '', cat = kind === 's' ? SUBCAT.get(id).id : id;
+    const t = {type: A.type, acc: A.acc, amount: A.type === 'expense' && A.refund ? -p.amt : p.amt, cat, sub,
+      date: A.date || today(), time: A.time || '', note: A.note.trim(), to: undefined, toAmount: undefined};
+    // when editing, the first part replaces the original operation
+    if (i === 0 && A.id) Object.assign(S.tx.find(x => x.id === A.id), t);
+    else S.tx.push(Object.assign({id: uid(), src: 'manual', created: now + i}, t));
+  });
+  S.lastAcc = A.acc;
+  save(); closeSheet(); closeAdd(); render();
+  toast(`Сохранено: ${parts.length} ${plural(parts.length, 'операция', 'операции', 'операций')}`);
 }
 function saveTx() {
   const v = round2(evalExpr(A.expr));
@@ -1946,6 +2072,7 @@ const ACT = {
   },
   // analytics
   anaType: el => { anaType = el.dataset.v; anaOff.clear(); anaSel = null; render(); },
+  anaMonth: el => { VIEW.ana.mode = 'period'; cur = el.dataset.k; render(); },
   curSign: () => { S.currencySign = S.currencySign === false; if (!S.currency) S.currency = 'Br'; save(); render(); },
   anaToggle: el => { const id = el.dataset.id; anaOff.has(id) ? anaOff.delete(id) : anaOff.add(id); render(); },
   anaAll: () => {
@@ -1989,6 +2116,7 @@ const ACT = {
   closeAdd: () => closeAdd(),
   addType: el => {
     const v = el.dataset.v; if (A.type === v) return;
+    A.split = null;
     const wasCat = A.type === 'expense' || A.type === 'income';
     A.type = v;
     if (!(wasCat && (v === 'expense' || v === 'income') && CAT.get(A.cat) && CAT.get(A.cat).type === v)) { A.cat = ''; A.sub = ''; }
@@ -2024,6 +2152,10 @@ const ACT = {
   },
   pickCat: el => { A.cat = el.dataset.id; A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
   pickSub: el => { if (el.dataset.id) { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; } else A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
+  split: () => sheetSplit(),
+  splitAdd: () => { A.split.push({key: '', amt: ''}); sheetSplit(); sheetDirty = true; },
+  splitDel: el => { A.split.splice(+el.dataset.i, 1); sheetSplit(); sheetDirty = true; },
+  splitSave: () => saveSplit(),
   catSearch: () => {
     openSheet(`<h2>Категория</h2><input class="catsearch" type="search" data-catsearch placeholder="Поиск категории" autocomplete="off">
       <div id="catGrid">${catGridHtml('')}</div>`);
@@ -2033,10 +2165,87 @@ const ACT = {
   pickSubS: el => { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
   key: el => pressKey(el.dataset.k),
   saveTx: () => saveTx(),
-  delTx: () => { if (!confirm('Удалить операцию?')) return; S.tx = S.tx.filter(t => t.id !== A.id); save(); closeAdd(); render(); toast('Удалено'); }
+  delTx: () => { const id = A.id; closeAdd(); deleteTx(id); },
+  swDelete: el => { closeSwipe(el.closest('.swr')); deleteTx(el.dataset.id); },
+  swRepeat: el => { closeSwipe(el.closest('.swr')); repeatTx(el.dataset.id); }
 };
 
+// ---------- delete with undo, repeat ----------
+function refreshAfterChange() { render(); if (!$('#sheet').hidden && sheetCtx) sheetCtx(); }
+function deleteTx(id) {
+  const i = S.tx.findIndex(t => t.id === id); if (i < 0) return;
+  const [t] = S.tx.splice(i, 1);
+  save(); refreshAfterChange();
+  undoToast('Операция удалена', () => { S.tx.splice(Math.min(i, S.tx.length), 0, t); save(); refreshAfterChange(); });
+}
+// a copy of the operation for today, opened in the entry screen to check before saving
+function repeatTx(id) {
+  if (!S.tx.some(x => x.id === id)) return;
+  const back = sheetCtx; closeSheet();
+  openAdd(id);
+  Object.assign(A, {id: '', date: today(), time: nowTime(), back});
+  renderAdd();
+}
+let undoTimer, undoFn = null;
+function undoToast(text, fn) {
+  const el = $('#undo'); undoFn = fn;
+  el.querySelector('span').textContent = text; el.classList.add('on');
+  clearTimeout(undoTimer); undoTimer = setTimeout(() => { el.classList.remove('on'); undoFn = null; }, 5000);
+}
+$('#undo button').addEventListener('click', () => { const fn = undoFn; undoFn = null; $('#undo').classList.remove('on'); if (fn) fn(); });
+
+// ---------- swipe operations: short swipe opens a button, a long one acts at once ----------
+let swr = null, swrOpen = null, swrSuppress = false;
+const SW_BTN = 92;
+function closeSwipe(row) {
+  if (!row) return;
+  row.querySelector('.tx').style.transform = ''; row.classList.remove('open-l', 'open-r');
+  if (swrOpen === row) swrOpen = null;
+}
+document.addEventListener('touchstart', e => {
+  const row = e.target.closest && e.target.closest('.swr');
+  if (!row || e.touches.length !== 1 || e.target.closest('.swr-act')) return;
+  if (swrOpen && swrOpen !== row) closeSwipe(swrOpen);
+  const base = row.classList.contains('open-l') ? -SW_BTN : row.classList.contains('open-r') ? SW_BTN : 0;
+  swr = {row, f: row.querySelector('.tx'), x0: e.touches[0].clientX, y0: e.touches[0].clientY, base, dx: base, lock: null, w: row.offsetWidth};
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+  if (!swr) return;
+  const t = e.touches[0], mx = t.clientX - swr.x0, my = t.clientY - swr.y0;
+  if (!swr.lock) {
+    if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
+    swr.lock = Math.abs(mx) > Math.abs(my) ? 'x' : 'y';   // scrolling the list wins on vertical moves
+    if (swr.lock === 'y') { swr = null; return; }
+    swr.f.style.transition = 'none';
+  }
+  e.preventDefault();
+  swr.dx = swr.base + mx;
+  swr.f.style.transform = `translateX(${swr.dx}px)`;
+  swr.row.querySelector('.del').style.width = Math.max(SW_BTN, -swr.dx) + 'px';
+  swr.row.querySelector('.rep').style.width = Math.max(SW_BTN, swr.dx) + 'px';
+  swr.row.classList.toggle('far', Math.abs(swr.dx) > swr.w * .5);
+}, {passive: false});
+const swipeRowEnd = e => {
+  if (!swr) return;
+  const s = swr; swr = null;
+  swrSuppress = true; setTimeout(() => { swrSuppress = false; }, 350);
+  s.f.style.transition = '';
+  s.row.querySelector('.del').style.width = ''; s.row.querySelector('.rep').style.width = '';
+  const far = Math.abs(s.dx) > s.w * .5 && e.type === 'touchend', id = s.row.dataset.id;
+  s.row.classList.remove('far');
+  if (s.dx < 0 && far) { s.f.style.transform = `translateX(${-s.w}px)`; setTimeout(() => deleteTx(id), 160); return; }
+  if (s.dx > 0 && far) { closeSwipe(s.row); repeatTx(id); return; }
+  if (s.dx < -SW_BTN / 2) { s.f.style.transform = `translateX(${-SW_BTN}px)`; s.row.classList.add('open-l'); swrOpen = s.row; }
+  else if (s.dx > SW_BTN / 2) { s.f.style.transform = `translateX(${SW_BTN}px)`; s.row.classList.add('open-r'); swrOpen = s.row; }
+  else closeSwipe(s.row);
+};
+document.addEventListener('touchend', swipeRowEnd);
+document.addEventListener('touchcancel', swipeRowEnd);
+
 document.addEventListener('click', e => {
+  // a swipe isn't a tap; a tap anywhere closes an opened row
+  if (swrSuppress) { e.preventDefault(); return; }
+  if (swrOpen && !e.target.closest('.swr-act')) { closeSwipe(swrOpen); e.preventDefault(); return; }
   const el = e.target.closest('[data-act]'); if (!el) return;
   const fn = ACT[el.dataset.act]; if (fn) { e.preventDefault(); fn(el, e); }
 });
@@ -2046,6 +2255,7 @@ document.addEventListener('input', e => {
   const el = e.target, d = el.dataset;
   if ('search' in d) { homeQ = el.value; homeLimit = 200; const tmp = document.createElement('div'); tmp.innerHTML = vHome(); $('#homeList').innerHTML = tmp.querySelector('#homeList').innerHTML; return; }
   if ('catsearch' in d) { $('#catGrid').innerHTML = catGridHtml(el.value); return; }
+  if ('split' in d) { A.split[+d.i][d.split] = el.value; if (d.split === 'amt') paintSplit(); return; }
   if (d.addf === 'note') { A.note = el.value; return; }
   if ('currency' in d) { S.currency = el.value.trim(); saveSoon(); return; }
   if ('lim' in d) {
