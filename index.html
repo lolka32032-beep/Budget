@@ -145,7 +145,11 @@ main{max-width:640px;margin:0 auto}
 
 /* analytics */
 .donut{display:block;width:100%;max-width:330px;margin:0 auto 8px}
-.donut text{fill:var(--text)}
+.donut text{fill:var(--text);pointer-events:none}
+.donut .dseg{transition:transform .18s ease,opacity .18s ease}
+.donut .dseg.dim,.donut path.dim{opacity:.3}
+.donut path.seg{cursor:pointer;transition:opacity .18s ease}
+.anarow.hl{outline:2px solid var(--accent);outline-offset:-2px}
 .chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--muted);flex:none;display:inline-flex;align-items:center;justify-content:center;font-size:14px;color:transparent}
 .chk.on{background:var(--text);border-color:var(--text);color:var(--bg)}
 .anarow{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:16px;padding:8px 12px 8px 8px;margin:0 0 6px}
@@ -696,6 +700,7 @@ function render() {
   $('#fab').hidden = empty || tab === 'more';
   $('#view').innerHTML = empty && tab !== 'more' ? vWelcome()
     : ({home: vHome, accounts: vAccounts, analytics: vAnalytics, budget: vBudget, more: sub === 'cats' ? vCats : vMore})[tab]();
+  if (tab === 'analytics') paintDonut();
 }
 
 function vWelcome() {
@@ -784,28 +789,106 @@ function arcPath(r0, r1, a0, a1) {
   const large = a1 - a0 > Math.PI ? 1 : 0;
   return `M${p(r1, a0)}A${r1} ${r1} 0 ${large} 1 ${p(r1, a1)}L${p(r0, a1)}A${r0} ${r0} 0 ${large} 0 ${p(r0, a0)}Z`;
 }
+// ---------- interactive chart ----------
+// tap a slice to highlight it (details in the centre), tap it again to open its operations,
+// slide a finger around the ring to run through the slices, tap the centre to reset
+let anaSel = null;   // {cid, sid}: highlighted category ('' sid) or subcategory
+let DONUT = null;    // what was drawn: total and slice angles, for hit testing
 function donut(rows, total) {
-  let svg = `<svg class="donut" viewBox="0 0 300 300" role="img" aria-label="Диаграмма по категориям">`;
+  DONUT = {total, segs: []};
+  let svg = `<svg class="donut" id="donut" viewBox="0 0 300 300" role="img" aria-label="Диаграмма по категориям">`;
   if (total > 0) {
     let ang = -Math.PI / 2;
     const gap = rows.length > 1 ? 0.012 : 0;
     for (const [id, g] of rows) {
       if (anaOff.has(id) || g.total <= 0) continue;
       const c = catInfo(id), span = Math.min(g.total / total * Math.PI * 2, Math.PI * 2 - 0.0001);
-      svg += `<path d="${arcPath(68, 112, ang + gap, ang + span - gap)}" fill="${c.color}" fill-opacity=".75"/>`;
+      const seg = {cid: id, a0: ang, a1: ang + span, v: g.total, subs: []};
+      let paths = `<path class="seg" data-cid="${id}" d="${arcPath(68, 112, ang + gap, ang + span - gap)}" fill="${c.color}" fill-opacity=".75"/>`;
       let sa = ang;
       for (const [sid, v] of [...g.subs].sort((x, y) => y[1] - x[1])) {
         if (v <= 0) continue;
         const ss = span * v / g.total, s = SUB.get(sid);
-        svg += `<path d="${arcPath(118, 132, sa + gap, sa + ss - gap)}" fill="${s ? s.color : c.color}"/>`;
+        seg.subs.push({sid, a0: sa, a1: sa + ss, v});
+        paths += `<path class="seg sub" data-cid="${id}" data-sid="${sid}" d="${arcPath(118, 132, sa + gap, sa + ss - gap)}" fill="${s ? s.color : c.color}"/>`;
         sa += ss;
       }
+      const mid = ang + span / 2;
+      svg += `<g class="dseg" data-cid="${id}" data-dx="${(Math.cos(mid) * 9).toFixed(1)}" data-dy="${(Math.sin(mid) * 9).toFixed(1)}">${paths}</g>`;
+      DONUT.segs.push(seg);
       ang += span;
     }
   } else svg += `<circle cx="150" cy="150" r="90" fill="none" stroke="var(--track)" stroke-width="44"/>`;
-  return svg + `<text x="150" y="140" text-anchor="middle" font-size="14" fill-opacity=".6">Итого</text>
-    <text x="150" y="168" text-anchor="middle" font-size="26" font-weight="600">${esc(money(total))}</text></svg>`;
+  return svg + `<g id="dcenter">${donutCenter()}</g></svg>`;
 }
+function selSeg() {
+  if (!anaSel || !DONUT) return null;
+  const seg = DONUT.segs.find(s => s.cid === anaSel.cid);
+  if (!seg) return null;
+  const sub = anaSel.sid ? seg.subs.find(s => s.sid === anaSel.sid) : null;
+  return anaSel.sid && !sub ? null : {seg, sub};
+}
+function donutCenter() {
+  const s = selSeg(), total = DONUT ? DONUT.total : 0;
+  if (!s) return `<text x="150" y="140" text-anchor="middle" font-size="14" fill-opacity=".6">Итого</text>
+    <text x="150" y="168" text-anchor="middle" font-size="26" font-weight="600">${esc(money(total))}</text>`;
+  const info = s.sub ? subInfo(s.seg.cid, s.sub.sid) : catInfo(s.seg.cid), v = s.sub ? s.sub.v : s.seg.v;
+  const name = info.name.length > 16 ? info.name.slice(0, 15) + '…' : info.name;
+  return `<text x="150" y="126" text-anchor="middle" font-size="15">${esc(info.icon + ' ' + name)}</text>
+    <text x="150" y="156" text-anchor="middle" font-size="26" font-weight="600">${esc(money(v))}</text>
+    <text x="150" y="178" text-anchor="middle" font-size="13" fill-opacity=".6">${total ? Math.round(v / total * 100) : 0}% · ещё раз ›</text>`;
+}
+// update highlight without re-rendering the screen
+function paintDonut() {
+  const s = selSeg();
+  for (const g of document.querySelectorAll('#donut .dseg')) {
+    const on = s && g.dataset.cid === s.seg.cid;
+    g.classList.toggle('dim', !!s && !on);
+    g.style.transform = on ? `translate(${g.dataset.dx}px,${g.dataset.dy}px)` : '';
+    for (const p of g.querySelectorAll('path.sub')) p.classList.toggle('dim', !!(on && s.sub && p.dataset.sid !== s.sub.sid));
+  }
+  const c = $('#dcenter'); if (c) c.innerHTML = donutCenter();
+  for (const r of document.querySelectorAll('.anarow[data-row]')) r.classList.toggle('hl', !!s && r.dataset.row === s.seg.cid);
+}
+function selectSlice(cid, sid) {
+  if (anaSel && anaSel.cid === cid && anaSel.sid === sid) return;
+  anaSel = {cid, sid}; paintDonut(); haptic();
+}
+function donutHit(x, y) {
+  const svg = $('#donut'); if (!svg || !DONUT) return null;
+  const rc = svg.getBoundingClientRect(), k = 300 / rc.width;
+  const dx = (x - rc.left) * k - 150, dy = (y - rc.top) * k - 150, r = Math.hypot(dx, dy);
+  if (r < 40) return null;
+  let a = Math.atan2(dy, dx); if (a < -Math.PI / 2) a += Math.PI * 2;
+  const seg = DONUT.segs.find(s => a >= s.a0 && a < s.a1); if (!seg) return null;
+  if (r >= 115) { const sub = seg.subs.find(s => a >= s.a0 && a < s.a1); if (sub) return {cid: seg.cid, sid: sub.sid}; }
+  return {cid: seg.cid, sid: ''};
+}
+let donutDrag = null, donutDragged = false;
+document.addEventListener('click', e => {
+  if (!e.target.closest || !e.target.closest('#donut')) return;
+  if (donutDragged) { donutDragged = false; return; }
+  const p = e.target.closest('path.seg');
+  if (!p) { if (anaSel) { anaSel = null; paintDonut(); haptic(); } return; }
+  const cid = p.dataset.cid, sid = p.dataset.sid || '';
+  if (anaSel && anaSel.cid === cid && anaSel.sid === sid) { haptic(); sheetAnaCat(cid, sid); return; }
+  selectSlice(cid, sid);
+});
+document.addEventListener('touchstart', e => {
+  if (e.touches.length !== 1 || !e.target.closest || !e.target.closest('#donut path.seg')) return;
+  donutDrag = {x: e.touches[0].clientX, y: e.touches[0].clientY, moved: false};
+}, {passive: true});
+document.addEventListener('touchmove', e => {
+  if (!donutDrag) return;
+  const t = e.touches[0];
+  if (!donutDrag.moved && Math.hypot(t.clientX - donutDrag.x, t.clientY - donutDrag.y) < 8) return;
+  donutDrag.moved = true; e.preventDefault();
+  const hit = donutHit(t.clientX, t.clientY); if (hit) selectSlice(hit.cid, hit.sid);
+}, {passive: false});
+document.addEventListener('touchend', () => {
+  if (donutDrag && donutDrag.moved) { donutDragged = true; setTimeout(() => { donutDragged = false; }, 400); }
+  donutDrag = null;
+});
 function vAnalytics() {
   if (anaAcc && !ACC.has(anaAcc)) anaAcc = '';
   const [a, b] = rangeOf('ana');
@@ -820,7 +903,7 @@ function vAnalytics() {
     <button class="chk ${allOn ? 'on' : ''}" data-act="anaAll" aria-label="Включить или выключить все категории">✓</button></div>`;
   for (const [id, g] of rows) {
     const c = catInfo(id), off = anaOff.has(id);
-    h += `<div class="anarow ${off ? 'off' : ''}"><button class="nmb" data-act="anaOpen" data-id="${id}">${icon(c.icon, c.color, 'sm')}<span>${esc(c.name)}</span>
+    h += `<div class="anarow ${off ? 'off' : ''} ${anaSel && anaSel.cid === id && !off ? 'hl' : ''}" data-row="${id}"><button class="nmb" data-act="anaOpen" data-id="${id}">${icon(c.icon, c.color, 'sm')}<span>${esc(c.name)}</span>
       <span class="num" style="margin-left:auto;font-weight:500">${money(g.total)}</span></button>
       <button class="chk ${off ? '' : 'on'}" data-act="anaToggle" data-id="${id}" aria-label="Учитывать">✓</button></div>`;
   }
@@ -910,6 +993,8 @@ function vMore() {
     </select></label>
     <p class="hint">Например, 20 — если зарплата приходит 20-го: «Октябрь» — это 20 октября – 19 ноября. Меняет текущий и будущие периоды, прошлые остаются как были.</p>
     <label>Валюта<input data-currency value="${esc(S.currency)}" placeholder="Br"></label>
+    <button class="row" style="width:100%;margin-top:14px" data-act="hapticsToggle"><span>Вибрация при касаниях<br><small class="muted">на iPhone с iOS 18 и новее</small></span>
+      <span class="chk ${S.haptics === false ? '' : 'on'}">✓</span></button>
   </section>
   <section class="card"><b>Как установить на iPhone</b>
     <ol class="steps"><li>Откройте страницу в Safari.</li><li>«Поделиться» → «На экран „Домой“».</li><li>Открывайте приложение только с иконки — без интернета тоже работает.</li></ol></section>
@@ -961,6 +1046,7 @@ function requestClose(animated) {
   const el = $('.sheet');
   if (sheetForm && sheetDirty && !confirm('Закрыть без сохранения?')) { el.style.transition = 'transform .2s ease'; el.style.transform = ''; return; }
   if (!animated) { closeSheet(); return; }
+  haptic();
   el.style.transition = 'transform .2s ease'; el.style.transform = 'translateY(100%)';
   setTimeout(closeSheet, 200);
 }
@@ -1210,7 +1296,7 @@ $('#add').addEventListener('touchmove', e => {
   e.preventDefault();
   const d = new Date(dsw.base + 'T12:00'); d.setDate(d.getDate() - Math.trunc(dx / DAY_STEP));
   dsw.date = iso(d) > today() ? today() : iso(d);
-  $('#dateLbl').textContent = dateLabel(dsw.date);
+  if ($('#dateLbl').textContent !== dateLabel(dsw.date)) { $('#dateLbl').textContent = dateLabel(dsw.date); haptic(); }
 }, {passive: false});
 const dateSwipeEnd = e => {
   if (!dsw) return;
@@ -1247,7 +1333,7 @@ function saveTx() {
   else S.tx.push(Object.assign({id: uid(), src: 'manual', created: Date.now()}, t));
   S.lastAcc = A.acc;
   const edited = !!A.id;
-  save(); closeAdd(); render(); toast(edited ? 'Изменено' : 'Сохранено');
+  haptic(); save(); closeAdd(); render(); toast(edited ? 'Изменено' : 'Сохранено');
 }
 
 // ---------- CSV import ----------
@@ -1539,6 +1625,25 @@ const TOKEN_STEPS = `<ol class="steps">
   <li>Note: «Бюджет», Expiration: <b>No expiration</b>, отметьте только галочку <b>gist</b>.</li>
   <li><b>Generate token</b> → скопируйте ключ (начинается с <b>ghp_</b>) и вставьте ниже.</li></ol>`;
 
+// ---------- haptics ----------
+// Android: the Vibration API. iPhone has none for web apps; on iOS 18+ toggling a hidden
+// <input switch> gives the system "tick" — an unofficial trick that may stop working one day.
+let hapticEl = null;
+function haptic() {
+  if (S.haptics === false) return;
+  try {
+    if (navigator.vibrate) { navigator.vibrate(8); return; }
+    if (!hapticEl) {
+      hapticEl = document.createElement('label'); hapticEl.setAttribute('aria-hidden', 'true'); hapticEl.style.display = 'none';
+      const input = document.createElement('input'); input.type = 'checkbox'; input.setAttribute('switch', ''); input.dataset.haptic = '1';
+      hapticEl.appendChild(input); document.body.appendChild(hapticEl);
+    }
+    hapticEl.click();
+  } catch (e) {}
+}
+// buttons that tick when pressed
+const HAPTIC_ACTS = new Set(['key', 'swapAcc', 'pickCat', 'pickSub', 'pickCatS', 'pickSubS', 'anaToggle', 'anaAll', 'anaType', 'addType', 'setAcc', 'toggleBudAcc']);
+
 // ---------- toast ----------
 let toastTimer;
 function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 2600); }
@@ -1550,8 +1655,8 @@ function dragTo(y) {
   const {item, list} = drag;
   const sibs = [...list.children].filter(x => x !== item && x.dataset.sortId);
   const before = sibs.find(s => { const r = s.getBoundingClientRect(); return y < r.top + r.height / 2; });
-  if (before) { if (item.nextElementSibling !== before) list.insertBefore(item, before); }
-  else if (sibs.length && sibs[sibs.length - 1].nextElementSibling !== item) sibs[sibs.length - 1].after(item);
+  if (before) { if (item.nextElementSibling !== before) { list.insertBefore(item, before); haptic(); } }
+  else if (sibs.length && sibs[sibs.length - 1].nextElementSibling !== item) { sibs[sibs.length - 1].after(item); haptic(); }
 }
 function dragLoop() {
   if (!drag) return;
@@ -1580,7 +1685,7 @@ document.addEventListener('pointerdown', e => {
   e.preventDefault();
   try { h.setPointerCapture(e.pointerId); } catch (err) {}
   drag = {item, list, y: e.clientY};
-  item.classList.add('dragging'); document.body.classList.add('nosel');
+  item.classList.add('dragging'); document.body.classList.add('nosel'); haptic();
   drag.raf = requestAnimationFrame(dragLoop);
 });
 document.addEventListener('pointermove', e => { if (drag) { e.preventDefault(); drag.y = e.clientY; } }, {passive: false});
@@ -1737,7 +1842,8 @@ const ACT = {
     save(); closeSheet(); render();
   },
   // analytics
-  anaType: el => { anaType = el.dataset.v; anaOff.clear(); render(); },
+  anaType: el => { anaType = el.dataset.v; anaOff.clear(); anaSel = null; render(); },
+  hapticsToggle: () => { S.haptics = S.haptics === false; save(); render(); haptic(); },
   anaToggle: el => { const id = el.dataset.id; anaOff.has(id) ? anaOff.delete(id) : anaOff.add(id); render(); },
   anaAll: () => {
     const [a, b] = rangeOf('ana'), ids = anaCalc(a, b).map(([id]) => id);
@@ -1810,12 +1916,12 @@ const ACT = {
   pickSubS: el => { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
   key: el => pressKey(el.dataset.k),
   saveTx: () => saveTx(),
-  delTx: () => { if (!confirm('Удалить операцию?')) return; S.tx = S.tx.filter(t => t.id !== A.id); save(); closeAdd(); render(); toast('Удалено'); }
+  delTx: () => { if (!confirm('Удалить операцию?')) return; haptic(); S.tx = S.tx.filter(t => t.id !== A.id); save(); closeAdd(); render(); toast('Удалено'); }
 };
 
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-act]'); if (!el) return;
-  const fn = ACT[el.dataset.act]; if (fn) { e.preventDefault(); fn(el, e); }
+  const fn = ACT[el.dataset.act]; if (fn) { e.preventDefault(); if (HAPTIC_ACTS.has(el.dataset.act)) haptic(); fn(el, e); }
 });
 
 // typing: update state in place without re-rendering, so the iPhone keyboard stays open
