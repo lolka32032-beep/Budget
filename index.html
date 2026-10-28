@@ -257,6 +257,26 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 #add .chip b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #add .chip small{display:block;font-size:11px;color:var(--muted)}
 .note{margin:0 0 8px;background:var(--card)}
+.add-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}
+.add-head b{font-size:17px;font-weight:600}
+.types4{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;background:var(--card);border-radius:16px;padding:4px}
+.types4 button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:7px 2px;border-radius:12px;font-size:12.5px;font-weight:600;color:var(--muted);text-align:center}
+.types4 .ti{font-size:17px;line-height:1.2}
+.types4 .t-income .ti{color:var(--inc)}.types4 .t-expense .ti{color:var(--exp)}.types4 .t-transfer .ti{color:#0a84ff}
+.types4 .t-income.on{background:var(--ok-soft);color:var(--inc)}
+.types4 .t-expense.on{background:var(--warn-soft);color:var(--exp)}
+.types4 .t-transfer.on{background:rgba(10,132,255,.16);color:#0a84ff}
+.types4 .t-debt.on{background:rgba(191,90,242,.16);color:#bf5af2}
+.tcard.focus{outline:2px solid var(--accent);outline-offset:-2px}
+.pair .tamt .val{font-size:36px}
+.pair .tamt .expr{min-height:0;font-size:13px}
+.pair .tcard{min-height:104px;padding:8px}
+.pair .tcard:first-child .tamt{padding-bottom:10px}.pair .tcard:last-child .tamt{padding-top:8px}
+@media (max-height:780px){.keys button{height:46px}.keys{gap:5px}}
+.arow-w{margin:0 0 6px}.arow-w .arow{margin:0}
+.goal{padding:8px 12px 2px}
+.goal .bar{height:6px}.goal .bar i{background:var(--accent)}.goal .bar i.ok{background:var(--ok)}
+.goal .small{margin-top:4px}
 .datechip{touch-action:pan-y;min-width:132px;justify-content:center}
 .pair{flex:1;display:flex;flex-direction:column;justify-content:center;margin:10px 0 8px;min-height:0}
 .tcard{flex:1;min-height:110px;max-height:200px;background:var(--card);border-radius:22px;padding:10px;display:flex;flex-direction:column}
@@ -319,7 +339,7 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 <script>
 'use strict';
 const KEY = 'budget-app-v1';
-const APP_VERSION = 17;   // keep in step with VERSION in sw.js
+const APP_VERSION = 18;   // keep in step with VERSION in sw.js
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -349,8 +369,12 @@ const nf = new Intl.NumberFormat('ru-RU', {maximumFractionDigits: 2});
 const round2 = n => Math.round(n * 100) / 100;
 // currency after the number: the drawn Belarusian ruble sign by default, or the text from settings. Returns HTML.
 const curHtml = () => S.currencySign !== false ? '<i class="byn" role="img" aria-label="BYN"></i>' : (S.currency ? esc(S.currency) : '');
-const money = n => { const c = curHtml(); return nf.format(round2(n || 0)) + (c ? '&nbsp;' + c : ''); };
-const signed = n => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n));
+// cur: 'BYN' (default) or 'USD' — the currency of an account; totals across accounts are always in BYN
+const money = (n, cur = 'BYN') => {
+  const c = cur === 'USD' ? '$' : curHtml();
+  return nf.format(round2(n || 0)) + (c ? '&nbsp;' + c : '');
+};
+const signed = (n, cur) => (n > 0 ? '+' : n < 0 ? '−' : '') + money(Math.abs(n), cur);
 const num = v => { const n = parseFloat(String(v ?? '').replace(/\s/g, '').replace(',', '.')); return isFinite(n) ? n : 0; };
 const pad = n => String(n).padStart(2, '0');
 const iso = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
@@ -395,18 +419,23 @@ function ensureSub(c, name) {
 }
 function findAccount(name) { const n = norm(name); return S.accounts.find(a => norm(a.name) === n); }
 function kindOf(raw) { const k = norm(raw); return /debt|долг/.test(k) ? 'debt' : /sav|накоп|deposit|вклад/.test(k) ? 'savings' : 'regular'; }
-function ensureAccount(name, kindRaw) {
+const curFrom = raw => /usd|\$|доллар/i.test(String(raw || '')) ? 'USD' : 'BYN';
+function ensureAccount(name, kindRaw, curRaw) {
   let a = findAccount(name);
   if (!a) {
     const kind = kindOf(kindRaw);
-    a = {id: uid(), name: name.trim(), kind, icon: autoIcon(name, kind === 'debt' ? '🤝' : kind === 'savings' ? '🐷' : '💳'),
+    a = {id: uid(), name: name.trim(), kind, cur: curFrom(curRaw), icon: autoIcon(name, kind === 'debt' ? '🤝' : kind === 'savings' ? '🐷' : '💳'),
       color: PALETTE[(S.accounts.length * 5 + 3) % PALETTE.length], initial: 0, budgetCat: ''};
     if (kind === 'debt') { const d = findCat('expense', 'Долг'); if (d) a.budgetCat = d.id; }
     S.accounts.push(a); ACC.set(a.id, a);
-  }
+  } else if (!a.cur && curRaw) a.cur = curFrom(curRaw);
   return a;
 }
 const accName = id => (ACC.get(id) || {name: '?'}).name;
+const curOf = id => (ACC.get(id) || {}).cur || 'BYN';
+const usdRate = () => num(S.usdRate);
+const toBYN = (v, cur) => cur === 'USD' ? v * usdRate() : v;
+const needRate = () => !usdRate() && S.accounts.some(a => a.cur === 'USD');
 const isDebtTx = t => t.type === 'transfer' && ((ACC.get(t.to) || {}).kind === 'debt' || (ACC.get(t.acc) || {}).kind === 'debt');
 
 // v1 (budget-only: months with category names and operations) -> v2
@@ -516,15 +545,21 @@ function balances() {
   }
   return m;
 }
-function totalBalance(bal = balances()) { return S.accounts.filter(a => a.kind !== 'debt').reduce((s, a) => s + (bal.get(a.id) || 0), 0); }
-// signed effect of an operation: on one account, or on "my money" overall (transfers count only to/from debt accounts)
+// in BYN; kinds: 'all' = own + savings (debts never count as my money)
+function totalBalance(bal = balances(), kinds = ['regular', 'savings']) {
+  return S.accounts.filter(a => kinds.includes(a.kind)).reduce((s, a) => s + toBYN(bal.get(a.id) || 0, a.cur), 0);
+}
+// signed effect of an operation: on one account (in its currency), or on "my money" overall in BYN
+// (transfers count overall only to/from debt accounts)
 function effect(t, accId) {
-  if (t.type === 'expense') return -t.amount;
-  if (t.type === 'income') return t.amount;
-  if (accId) return t.acc === accId ? -t.amount : t.to === accId ? (t.toAmount ?? t.amount) : 0;
+  if (accId && t.type === 'transfer') return t.acc === accId ? -t.amount : t.to === accId ? (t.toAmount ?? t.amount) : 0;
+  const k = accId ? 1 : null;
+  const conv = (v, id) => k ? v : toBYN(v, curOf(id));
+  if (t.type === 'expense') return -conv(t.amount, t.acc);
+  if (t.type === 'income') return conv(t.amount, t.acc);
   const to = ACC.get(t.to), fr = ACC.get(t.acc);
-  if (to && to.kind === 'debt' && !(fr && fr.kind === 'debt')) return -t.amount;
-  if (fr && fr.kind === 'debt' && !(to && to.kind === 'debt')) return t.toAmount ?? t.amount;
+  if (to && to.kind === 'debt' && !(fr && fr.kind === 'debt')) return -conv(t.amount, t.acc);
+  if (fr && fr.kind === 'debt' && !(to && to.kind === 'debt')) return conv(t.toAmount ?? t.amount, t.to);
   return null;
 }
 function catLimit(L, c) { return num(L[c.id]) + c.subs.reduce((s, x) => s + num(L[x.id]), 0); }
@@ -536,14 +571,16 @@ function budgetAccIds() {
   return new Set(main ? [main.id] : []);
 }
 // how an expense or transfer counts in the budget: [category, subcategory, amount], ['unc'|'out', '', amount], or null
+// amounts are in BYN (a dollar account added to the budget is converted at the rate from settings)
 function budKey(t, inB) {
-  if (t.type === 'expense') return !inB.has(t.acc) ? null : CAT.has(t.cat) ? [t.cat, SUB.has(t.sub) ? t.sub : '', t.amount] : ['unc', '', t.amount];
+  const out = toBYN(t.amount, curOf(t.acc));
+  if (t.type === 'expense') return !inB.has(t.acc) ? null : CAT.has(t.cat) ? [t.cat, SUB.has(t.sub) ? t.sub : '', out] : ['unc', '', out];
   if (t.type !== 'transfer') return null;
   const fIn = inB.has(t.acc), tIn = inB.has(t.to), to = ACC.get(t.to), fr = ACC.get(t.acc);
   // leaving the budget: into the category linked to that account (pension, debt...), otherwise "put aside"
-  if (fIn && !tIn) return to && CAT.has(to.budgetCat) ? [to.budgetCat, '', t.amount] : ['out', '', t.amount];
+  if (fIn && !tIn) return to && CAT.has(to.budgetCat) ? [to.budgetCat, '', out] : ['out', '', out];
   // money back from a linked account (a debt repaid) reduces that category; other incoming transfers don't count
-  if (!fIn && tIn && fr && CAT.has(fr.budgetCat)) return [fr.budgetCat, '', -(t.toAmount ?? t.amount)];
+  if (!fIn && tIn && fr && CAT.has(fr.budgetCat)) return [fr.budgetCat, '', -toBYN(t.toAmount ?? t.amount, curOf(t.to))];
   return null;
 }
 function budgetCalc(k) {
@@ -553,7 +590,7 @@ function budgetCalc(k) {
   const add = (cid, sid, v) => { cat.set(cid, (cat.get(cid) || 0) + v); const key = sid || cid + ':own'; sub.set(key, (sub.get(key) || 0) + v); };
   for (const t of S.tx) {
     if (t.date < a || t.date > b) continue;
-    if (t.type === 'income') { if (inB.has(t.acc)) incomeTx += t.amount; continue; }
+    if (t.type === 'income') { if (inB.has(t.acc)) incomeTx += toBYN(t.amount, curOf(t.acc)); continue; }
     const k2 = budKey(t, inB); if (!k2) continue;
     if (k2[0] === 'unc') { unc += k2[2]; uncList.push(t); }
     else if (k2[0] === 'out') { out += k2[2]; outList.push(t); }
@@ -632,13 +669,14 @@ function sheetPeriod(kind) {
 const incExpSeg = (act, v) => `<div class="seg ie">
   <button class="i ${v === 'income' ? 'on' : ''}" data-act="${act}" data-v="income"><span class="inc">↙</span> Доход</button>
   <button class="e ${v === 'expense' ? 'on' : ''}" data-act="${act}" data-v="expense"><span class="exp">↗</span> Расход</button></div>`;
-// the order from the Accounts tab: own accounts first, then debts
-const sortedAccounts = () => S.accounts.filter(a => a.kind !== 'debt').concat(S.accounts.filter(a => a.kind === 'debt'));
+// the order from the Accounts tab: accounts, then savings, then debts
+const KINDS = ['regular', 'savings', 'debt'];
+const sortedAccounts = () => KINDS.flatMap(k => S.accounts.filter(a => a.kind === k));
+const accMoney = (id, bal) => money(bal.get(id) || 0, curOf(id));
 function accChip(target, sel, balMap) {
   const a = ACC.get(sel), bal = balMap || balances();
-  const name = a ? a.name : 'Все счета', amt = a ? bal.get(a.id) || 0 : totalBalance(bal);
   return `<button class="selchip" data-act="pickAcc" data-target="${target}">${a ? icon(a.icon, a.color, 'round sm') : icon('💼', '#64748b', 'round sm')}
-    <span style="min-width:0"><b>${esc(name)}</b><small>${money(amt)}</small></span></button>`;
+    <span style="min-width:0"><b>${esc(a ? a.name : 'Все счета')}</b><small>${a ? accMoney(a.id, bal) : money(totalBalance(bal))}</small></span></button>`;
 }
 // target: home | ana | add (field acc/to of the operation being edited)
 function sheetPickAcc(target, field) {
@@ -649,15 +687,14 @@ function sheetPickAcc(target, field) {
     const isDebtSide = A.type === 'debt' && (ACC.get(A[field]) ? ACC.get(A[field]).kind === 'debt' : field === 'to');
     filter = isDebtSide ? (a => a.kind === 'debt') : (a => a.kind !== 'debt');
   }
-  const row = (id, ic, color, name, amt) => `<button class="tx pick" data-act="setAcc" data-target="${target}" data-field="${field || ''}" data-id="${id}">
-    ${icon(ic, color, 'round')}<span class="t"><b>${esc(name)}</b></span><span class="amt num ${amt < 0 ? 'neg' : ''}">${money(amt)}</span>
+  const row = (id, ic, color, name, amt, cur) => `<button class="tx pick" data-act="setAcc" data-target="${target}" data-field="${field || ''}" data-id="${id}">
+    ${icon(ic, color, 'round')}<span class="t"><b>${esc(name)}</b></span><span class="amt num ${amt < 0 ? 'neg' : ''}">${money(amt, cur)}</span>
     <span class="tick">${sel === id ? '✓' : ''}</span></button>`;
   const list = sortedAccounts().filter(filter);
-  const own = list.filter(a => a.kind !== 'debt'), debts = list.filter(a => a.kind === 'debt');
+  const group = (kind, title) => { const g = list.filter(a => a.kind === kind); return g.length ? (title ? `<h3>${title}</h3>` : '') + g.map(a => row(a.id, a.icon, a.color, a.name, bal.get(a.id) || 0, a.cur)).join('') : ''; };
   openSheet(`<h2>Счёт</h2>
     ${target === 'add' ? '' : row('', '💼', '#64748b', 'Все счета', totalBalance(bal))}
-    ${own.map(a => row(a.id, a.icon, a.color, a.name, bal.get(a.id) || 0)).join('')}
-    ${debts.length ? `<h3>Долги</h3>${debts.map(a => row(a.id, a.icon, a.color, a.name, bal.get(a.id) || 0)).join('')}` : ''}
+    ${group('regular', '')}${group('savings', 'Накопления')}${group('debt', 'Долги')}
     ${list.length ? '' : '<p class="muted">Подходящих счетов нет — создайте во вкладке «Счета».</p>'}`);
 }
 function fmtDay(d) {
@@ -666,16 +703,21 @@ function fmtDay(d) {
   const rel = d === t ? ' — Сегодня' : d === iso(y) ? ' — Вчера' : '';
   return WD[dt.getDay()] + ', ' + dt.getDate() + ' ' + MONTHS_GEN[dt.getMonth()] + (d.slice(0, 4) !== t.slice(0, 4) ? ' ' + d.slice(0, 4) : '') + rel;
 }
+// amounts are shown in the currency of the account they touch (not converted)
 function txView(t, accId) {
   if (t.type === 'transfer') {
-    const debt = isDebtTx(t), e = effect(t, accId);
+    const debt = isDebtTx(t), e = effect(t, accId), fc = curOf(t.acc), tc = curOf(t.to), to = t.toAmount ?? t.amount;
+    // my side of the transfer: the given account, or the non-debt side of a debt
+    const mine = accId ? (t.acc === accId ? [-t.amount, fc] : [to, tc])
+      : (ACC.get(t.to) || {}).kind === 'debt' ? [-t.amount, fc] : (ACC.get(t.acc) || {}).kind === 'debt' ? [to, tc] : null;
+    const plain = money(t.amount, fc) + (fc !== tc ? ' → ' + money(to, tc) : '');
     return {ic: debt ? '🤝' : '⇄', color: debt ? '#a855f7' : '#3b82f6', title: accName(t.acc) + ' → ' + accName(t.to), subt: t.note || (debt ? 'Долг' : 'Перевод'),
-      amt: e, shown: e == null ? money(t.amount) : signed(e), cls: e == null ? 'muted' : e > 0 ? 'inc' : ''};
+      amt: e, shown: mine ? signed(mine[0], mine[1]) : plain, cls: !mine ? 'muted' : mine[0] > 0 ? 'inc' : ''};
   }
-  const c = CAT.get(t.cat), s = SUB.get(t.sub), e = effect(t);
+  const c = CAT.get(t.cat), s = SUB.get(t.sub), v = t.type === 'income' ? t.amount : -t.amount;
   return {ic: (s && s.icon) || (c && c.icon) || '❔', color: (s && s.color) || (c && c.color) || '#64748b',
     title: s ? s.name : c ? c.name : 'Без категории', subt: t.note || (s && c ? c.name : ''),
-    amt: e, shown: signed(e), cls: e > 0 ? 'inc' : ''};
+    amt: effect(t, accId), shown: signed(v, curOf(t.acc)), cls: v > 0 ? 'inc' : ''};
 }
 // newest day first; within a day the most recently added first (imported ones by their Qalta timestamp)
 const stamp = t => t.created || (t.time ? new Date(t.date + 'T' + t.time).getTime() : 0);
@@ -690,7 +732,7 @@ function txList(list, accId, limit) {
   for (const t of sorted) { const e = effect(t, accId); if (e != null) sums.set(t.date, (sums.get(t.date) || 0) + e); }
   let h = '', last = null;
   for (const t of shown) {
-    if (t.date !== last) { h += `<div class="dhead"><span>${fmtDay(t.date)}</span><span class="num">${signed(sums.get(t.date) || 0)}</span></div>`; last = t.date; }
+    if (t.date !== last) { h += `<div class="dhead"><span>${fmtDay(t.date)}</span><span class="num">${signed(sums.get(t.date) || 0, accId ? curOf(accId) : 'BYN')}</span></div>`; last = t.date; }
     const v = txView(t, accId);
     h += `<button class="tx" data-act="edit" data-id="${t.id}">${icon(v.ic, v.color)}
       <span class="t"><b>${esc(v.title)}</b>${v.subt ? `<small>${esc(v.subt)}</small>` : ''}</span>
@@ -739,6 +781,10 @@ function vHome() {
   let inc = 0, exp = 0;
   for (const t of list) { const e = effect(t, homeAcc); if (e > 0) inc += e; else if (e < 0) exp -= e; }
   const big = homeAll && !q ? (homeAcc ? bal.get(homeAcc) || 0 : totalBalance(bal)) : inc - exp;
+  const cur = homeAcc ? curOf(homeAcc) : 'BYN';
+  // "free" money (ordinary accounts) vs savings, when looking at all accounts over all time
+  const split = !homeAcc && homeAll && !q && S.accounts.some(x => x.kind === 'savings')
+    ? `<div class="small" style="margin:-2px 0 6px">свободно ${money(totalBalance(bal, ['regular']))} · в накоплениях ${money(totalBalance(bal, ['savings']))}</div>` : '';
   let h = `<div class="hdr">${accChip('home', homeAcc, bal)}
     <div class="hbtns"><button class="ibtn ${searchOn ? 'on' : ''}" data-act="search" aria-label="Поиск"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button></div></div>
     ${searchOn ? `<div class="search"><input type="search" data-search value="${esc(homeQ)}" placeholder="Поиск по заметке, категории, сумме"></div>` : ''}
@@ -746,41 +792,73 @@ function vHome() {
       <div class="row"><button class="btn small" data-act="backup">Сделать копию</button></div></div>` : ''}
     ${installBanner()}
     <div class="total"><div class="lbl">${q ? 'Найдено' : homeAll ? (homeAcc ? 'Остаток на счёте' : 'Всего на счетах') : 'Итог за период'}</div>
-      <div class="big num ${big < 0 ? 'neg' : ''}">${money(big)}</div>
-      <div class="flows num"><span class="inc">↙ ${money(inc)}</span><span class="exp">↗ ${money(exp)}</span></div></div>
+      <div class="big num ${big < 0 ? 'neg' : ''}">${money(big, cur)}</div>${split}
+      <div class="flows num"><span class="inc">↙ ${money(inc, cur)}</span><span class="exp">↗ ${money(exp, cur)}</span></div></div>
+    ${rateBanner()}
     ${periodBar('home')}
-    <div id="homeList">${q ? `<div class="found"><span>${list.length} ${plural(list.length, 'запись', 'записи', 'записей')}</span><b class="num ${inc - exp > 0 ? 'inc' : ''}">${signed(inc - exp)}</b></div>` : ''}
+    <div id="homeList">${q ? `<div class="found"><span>${list.length} ${plural(list.length, 'запись', 'записи', 'записей')}</span><b class="num ${inc - exp > 0 ? 'inc' : ''}">${signed(inc - exp, cur)}</b></div>` : ''}
     ${list.length ? txList(list, homeAcc, homeLimit) : '<div class="empty"><p>Операций нет</p></div>'}</div>`;
   return h;
 }
 
 function vAccounts() {
   const bal = balances();
-  const inner = a => `${icon(a.icon, a.color, 'round')}<span class="nm">${esc(a.name)}</span>
-    <span class="bal num ${(bal.get(a.id) || 0) < 0 ? 'neg' : ''}">${money(bal.get(a.id) || 0)}</span>`;
+  const inner = a => `${icon(a.icon, a.color, 'round')}<span class="nm">${esc(a.name)}${a.cur === 'USD' ? ' <small class="muted">USD</small>' : ''}</span>
+    <span class="bal num ${(bal.get(a.id) || 0) < 0 ? 'neg' : ''}">${accMoney(a.id, bal)}</span>`;
   const row = a => accOrder
     ? `<div class="arow" data-sort-id="${a.id}"><div class="arow-in">${inner(a)}</div><span class="handle" aria-label="Перетащить">⠿</span></div>`
-    : `<div class="arow"><button data-act="openAcc" data-id="${a.id}">${inner(a)}</button>
-      <button class="pen" data-act="editAcc" data-id="${a.id}" aria-label="Изменить">${ICON_PEN}</button></div>`;
-  const own = S.accounts.filter(a => a.kind !== 'debt'), debts = S.accounts.filter(a => a.kind === 'debt');
+    : `<div class="arow-w"><div class="arow"><button data-act="openAcc" data-id="${a.id}">${inner(a)}</button>
+      <button class="pen" data-act="editAcc" data-id="${a.id}" aria-label="Изменить">${ICON_PEN}</button></div>${goalLine(a, bal.get(a.id) || 0)}</div>`;
+  const block = (kind, title, sum) => {
+    const list = S.accounts.filter(a => a.kind === kind);
+    if (!list.length) return '';
+    return `${title ? `<h3 class="row"><span>${title}</span>${sum && !accOrder ? `<span class="num">${money(totalBalance(bal, [kind]))}</span>` : ''}</h3>` : ''}
+      <div data-sortlist="acc-${kind}">${list.map(row).join('')}</div>`;
+  };
+  const hasSav = S.accounts.some(a => a.kind === 'savings');
   return `<div class="hdr"><h1>Счета</h1><div class="hbtns">
       <button class="pill ${accOrder ? 'on' : ''}" data-act="accOrder">${accOrder ? 'Готово' : 'Порядок'}</button>
       ${accOrder ? '' : '<button class="ibtn" data-act="newAcc" aria-label="Новый счёт">+</button>'}</div></div>
     ${accOrder ? '<p class="hint" style="margin:0 4px 10px">Зажмите ⠿ справа и перетащите счёт. Порядок применится везде, где выбирается счёт.</p>'
-      : `<div class="total"><div class="lbl">Всего на счетах</div><div class="big num">${money(totalBalance(bal))}</div></div>`}
-    <div data-sortlist="acc-own">${own.map(row).join('')}</div>
-    ${debts.length ? `<h3>Долги</h3><div data-sortlist="acc-debt">${debts.map(row).join('')}</div>${accOrder ? '' : '<p class="hint">Положительный остаток — должны вам, отрицательный — должны вы.</p>'}` : ''}
+      : `<div class="total"><div class="lbl">Всего на счетах</div><div class="big num">${money(totalBalance(bal))}</div>
+        ${hasSav ? `<div class="small">свободно ${money(totalBalance(bal, ['regular']))} · в накоплениях ${money(totalBalance(bal, ['savings']))}</div>` : ''}</div>${rateBanner()}`}
+    ${block('regular', hasSav ? 'Счета' : '', hasSav)}
+    ${block('savings', 'Накопления', true)}
+    ${block('debt', 'Долги', false)}
+    ${S.accounts.some(a => a.kind === 'debt') && !accOrder ? '<p class="hint">Положительный остаток долга — должны вам, отрицательный — должны вы.</p>' : ''}
     ${accOrder ? '' : '<button class="btn ghost wide" style="margin-top:12px" data-act="newAcc">+ Новый счёт</button>'}`;
+}
+// progress towards a savings goal; with a target month — how much to put aside each month
+function goalLine(a, bal) {
+  if (a.kind !== 'savings' || !(num(a.goal) > 0)) return '';
+  const goal = num(a.goal), pct = Math.max(0, Math.min(100, bal / goal * 100));
+  let perMonth = '';
+  if (a.goalDate && bal < goal) {
+    const [y, m] = a.goalDate.split('-').map(Number), now = new Date();
+    const months = Math.max(1, (y - now.getFullYear()) * 12 + (m - 1 - now.getMonth()));
+    perMonth = ` · ≈ ${money((goal - bal) / months, a.cur)} в месяц до ${MON_SHORT[m - 1]} ${y}`;
+  }
+  return `<div class="goal"><div class="bar"><i class="${pct >= 100 ? 'ok' : ''}" style="width:${pct}%"></i></div>
+    <div class="small num">${pct >= 100 ? 'Цель достигнута 🎉 ' : ''}${money(bal, a.cur)} из ${money(goal, a.cur)} · ${Math.round(pct)}%${perMonth}</div></div>`;
+}
+// a dollar account exists but the rate isn't set: totals in BYN would be wrong
+function rateBanner() {
+  if (!needRate()) return '';
+  return `<div class="banner">У вас есть счёт в долларах. Укажите курс, чтобы итоги в рублях считались правильно.
+    <div class="row"><button class="btn small" data-act="setRate">Указать курс</button></div></div>`;
 }
 
 // where an operation lands in analytics: [category id, subcategory id or 'own', amount], or null if it doesn't count
+// amounts: in the chosen account's currency, or converted to BYN when looking at all accounts
+const anaCur = () => anaAcc ? curOf(anaAcc) : 'BYN';
 function anaKey(t, a, b) {
   if (t.date < a || t.date > b || (anaAcc && t.acc !== anaAcc)) return null;
-  if (t.type === anaType) return [CAT.has(t.cat) ? t.cat : 'none', SUB.has(t.sub) ? t.sub : 'own', t.amount];
+  const v = anaAcc ? t.amount : toBYN(t.amount, curOf(t.acc));
+  if (t.type === anaType) return [CAT.has(t.cat) ? t.cat : 'none', SUB.has(t.sub) ? t.sub : 'own', v];
   if (t.type === 'transfer' && anaType === 'expense') {
     const to = ACC.get(t.to);
-    if (to && CAT.has(to.budgetCat)) return [to.budgetCat, 'own', t.amount];
-    if (to && to.kind === 'debt') return ['debt', 'own', t.amount];
+    if (to && CAT.has(to.budgetCat)) return [to.budgetCat, 'own', v];
+    if (to && to.kind === 'debt') return ['debt', 'own', v];
   }
   return null;
 }
@@ -843,9 +921,9 @@ function selSeg() {
 function donutCenter() {
   const s = selSeg(), total = DONUT ? DONUT.total : 0;
   // the centre is HTML laid over the chart (so the drawn currency sign can be used)
-  if (!s) return `<div class="dc1 muted">Итого</div><div class="dc2 num">${money(total)}</div>`;
+  if (!s) return `<div class="dc1 muted">Итого</div><div class="dc2 num">${money(total, anaCur())}</div>`;
   const info = s.sub ? subInfo(s.seg.cid, s.sub.sid) : catInfo(s.seg.cid), v = s.sub ? s.sub.v : s.seg.v;
-  return `<div class="dc1">${esc(info.icon + ' ' + info.name)}</div><div class="dc2 num">${money(v)}</div>
+  return `<div class="dc1">${esc(info.icon + ' ' + info.name)}</div><div class="dc2 num">${money(v, anaCur())}</div>
     <div class="dc3 muted">${total ? Math.round(v / total * 100) : 0}% · ещё раз ›</div>`;
 }
 // update highlight without re-rendering the screen
@@ -909,12 +987,12 @@ function vAnalytics() {
     ${periodBar('ana')}${donut(rows, total)}`;
   if (!rows.length) return h + `<div class="empty"><p>За этот период операций нет</p></div>`;
   const allOn = rows.every(([id]) => !anaOff.has(id));
-  h += `<div class="anarow"><span class="nmb" style="flex:1;padding-left:6px;font-weight:600">Все категории</span><span class="num">${money(total)}</span>
+  h += `<div class="anarow"><span class="nmb" style="flex:1;padding-left:6px;font-weight:600">Все категории</span><span class="num">${money(total, anaCur())}</span>
     <button class="chk ${allOn ? 'on' : ''}" data-act="anaAll" aria-label="Включить или выключить все категории">✓</button></div>`;
   for (const [id, g] of rows) {
     const c = catInfo(id), off = anaOff.has(id);
     h += `<div class="anarow ${off ? 'off' : ''} ${anaSel && anaSel.cid === id && !off ? 'hl' : ''}" data-row="${id}"><button class="nmb" data-act="anaOpen" data-id="${id}">${icon(c.icon, c.color, 'sm')}<span>${esc(c.name)}</span>
-      <span class="num" style="margin-left:auto;font-weight:500">${money(g.total)}</span></button>
+      <span class="num" style="margin-left:auto;font-weight:500">${money(g.total, anaCur())}</span></button>
       <button class="chk ${off ? '' : 'on'}" data-act="anaToggle" data-id="${id}" aria-label="Учитывать">✓</button></div>`;
   }
   return h;
@@ -1002,6 +1080,8 @@ function vMore() {
       ${Array.from({length: 31}, (_, i) => i + 1).map(d => `<option value="${d}" ${(S.startDay || 1) === d ? 'selected' : ''}>${d}${d === 1 ? ' (календарный месяц)' : ''}</option>`).join('')}
     </select></label>
     <p class="hint">Например, 20 — если зарплата приходит 20-го: «Октябрь» — это 20 октября – 19 ноября. Меняет текущий и будущие периоды, прошлые остаются как были.</p>
+    <button class="row" style="width:100%;margin-top:14px" data-act="setRate"><span>Курс доллара</span>
+      <b class="num">${S.usdRate ? `1 $ = ${money(S.usdRate)}` : 'не указан'} ›</b></button>
     <button class="row" style="width:100%;margin-top:14px" data-act="curSign"><span>Валюта: знак бел. рубля <i class="byn"></i></span>
       <span class="chk ${S.currencySign !== false ? 'on' : ''}">✓</span></button>
     ${S.currencySign === false ? `<label>Валюта текстом<input data-currency value="${esc(S.currency)}" placeholder="Br"></label>` : ''}
@@ -1113,6 +1193,15 @@ function sheetAccount(id) {
     <label>Тип</label>
     <div class="seg" style="background:var(--card2)">${[['regular', 'Обычный'], ['savings', 'Накопления'], ['debt', 'Долг']].map(([v, l]) =>
       `<label><input type="radio" name="fKind" value="${v}" ${a.kind === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
+    <label>Валюта</label>
+    <div class="seg" style="background:var(--card2)">${[['BYN', 'Белорусский рубль'], ['USD', 'Доллар $']].map(([v, l]) =>
+      `<label><input type="radio" name="fCur" value="${v}" ${(a.cur || 'BYN') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
+    ${used ? '<p class="hint">Смена валюты не пересчитывает уже внесённые операции — меняется только подпись.</p>' : ''}
+    <div id="goalBox" ${a.kind === 'savings' ? '' : 'hidden'}>
+      <div class="maps"><label>Цель (необязательно)<input id="fGoal" type="text" inputmode="decimal" value="${a.goal || ''}" placeholder="например 2000"></label>
+        <label>К какому месяцу<input id="fGoalDate" type="month" value="${a.goalDate || ''}"></label></div>
+      <p class="hint">Под счётом появится полоска «сколько из цели», а с датой — сколько откладывать в месяц.</p>
+    </div>
     <label>Начальный остаток<input id="fInit" type="text" inputmode="decimal" value="${a.initial || ''}" placeholder="0"></label>
     <p class="hint">Остаток на момент первой операции в приложении. При переносе всей истории из Qalta оставьте 0.</p>
     <label>Переводы на этот счёт в бюджете считать как<select id="fBudCat"><option value="">— не учитывать —</option>
@@ -1147,10 +1236,10 @@ function sheetAnaCat(id, sid) {
   const shown = sid ? list.filter(t => anaKey(t, a, b)[1] === sid) : list;
   const row = (key, name, ic, color, v) => `<button class="anarow" style="width:100%;${sid === key ? 'outline:2px solid var(--accent);outline-offset:-2px' : ''}" data-act="anaSub" data-id="${id}" data-sid="${key}">
     ${icon(ic, color, 'sm')}<span style="flex:1;min-width:0;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(name)}</span>
-    <span class="num small">${money(v)} · ${total ? Math.round(v / total * 100) : 0}%</span></button>`;
+    <span class="num small">${money(v, anaCur())} · ${total ? Math.round(v / total * 100) : 0}%</span></button>`;
   const v = VIEW.ana;
   openSheet(`<h2>${esc(c.icon)} ${esc(c.name)}</h2>
-    <div class="row small"><span>${v.mode === 'all' ? 'Всё время' : v.mode === 'custom' ? shortDate(v.from) + ' – ' + shortDate(v.to) : periodRange(cur)}${anaAcc ? ' · ' + esc(accName(anaAcc)) : ''}</span><b class="num" style="color:var(--text)">${money(total)}</b></div>
+    <div class="row small"><span>${v.mode === 'all' ? 'Всё время' : v.mode === 'custom' ? shortDate(v.from) + ' – ' + shortDate(v.to) : periodRange(cur)}${anaAcc ? ' · ' + esc(accName(anaAcc)) : ''}</span><b class="num" style="color:var(--text)">${money(total, anaCur())}</b></div>
     ${subs.size > 1 ? `<h3>По подкатегориям</h3>${row('', 'Все', c.icon, c.color, total)}
       ${[...subs].sort((x, y) => y[1] - x[1]).map(([k, val]) => { const s = subInfo(id, k); return row(k, s.name, s.icon, s.color, val); }).join('')}` : ''}
     <h3>Операции${sid ? ': ' + esc(subInfo(id, sid).name) : ''} (${shown.length})</h3>
@@ -1208,10 +1297,14 @@ function openAdd(id) {
   const firstRegular = (S.accounts.find(a => a.id === (homeAcc || S.lastAcc) && a.kind !== 'debt') || S.accounts.find(a => a.kind !== 'debt') || S.accounts[0] || {}).id || '';
   if (t) {
     // for transfers and debts: acc = where the money leaves, to = where it arrives
+    // between currencies the arriving amount is its own (expr2), otherwise it mirrors the leaving one
+    const cross = t.type === 'transfer' && curOf(t.acc) !== curOf(t.to);
     A = {id, type: t.type === 'transfer' ? (isDebtTx(t) ? 'debt' : 'transfer') : t.type, expr: fmtExprNum(Math.abs(t.amount)), refund: t.type === 'expense' && t.amount < 0,
-      acc: t.acc, to: t.to || '', date: t.date, time: t.time || '', note: t.note || '', cat: t.cat || '', sub: t.sub || '', q: ''};
+      acc: t.acc, to: t.to || '', date: t.date, time: t.time || '', note: t.note || '', cat: t.cat || '', sub: t.sub || '', q: '',
+      expr2: cross ? fmtExprNum(t.toAmount ?? t.amount) : '0', manual2: cross, focus: 'from'};
   } else {
-    A = {id: '', type: 'expense', expr: '0', refund: false, acc: firstRegular, to: '', date: today(), time: nowTime(), note: '', cat: '', sub: '', q: ''};
+    A = {id: '', type: 'expense', expr: '0', refund: false, acc: firstRegular, to: '', date: today(), time: nowTime(), note: '', cat: '', sub: '', q: '',
+      expr2: '0', manual2: false, focus: 'from'};
   }
   if (!A.to) A.to = (S.accounts.find(a => a.id !== A.acc && (A.type === 'debt' ? a.kind === 'debt' : a.kind !== 'debt')) || {}).id || '';
   document.body.style.overflow = 'hidden';
@@ -1223,12 +1316,24 @@ function closeAdd() {
   $('#add').hidden = true; A = null; document.body.style.overflow = '';
   if (back) { index(); back(); }
 }
-// the "to" card of a transfer mirrors the amount in green, dimmed while it's zero
+// a transfer between a BYN and a USD account
+const isCross = () => (A.type === 'transfer' || A.type === 'debt') && A.to && curOf(A.acc) !== curOf(A.to);
+function convert(v, from, to) {
+  const r = usdRate(); if (from === to) return v; if (!r) return 0;
+  return from === 'USD' ? v * r : v / r;
+}
+// what arrives: typed by hand, or counted from what leaves at the rate from settings
+function toValue() {
+  if (!isCross()) return round2(evalExpr(A.expr));
+  return round2(A.manual2 ? evalExpr(A.expr2) : convert(evalExpr(A.expr), curOf(A.acc), curOf(A.to)));
+}
+// the "to" card of a transfer shows the arriving amount in green, dimmed while it's zero
 function addAmountHtml(to) {
-  const v = round2(evalExpr(A.expr)), hasOp = /[+−×÷]/.test(A.expr);
+  const expr = to ? (isCross() && A.manual2 ? A.expr2 : '') : A.expr;
+  const v = to ? toValue() : round2(evalExpr(A.expr)), hasOp = /[+−×÷]/.test(expr);
   const color = to || A.type === 'income' || (A.type === 'expense' && A.refund) ? 'var(--inc)' : 'var(--text)';
-  return `<div class="expr">${hasOp && !to ? esc(A.expr) : ''}</div>
-    <div class="val num" style="color:${color};${to && !v ? 'opacity:.35' : ''}">${money(v)}</div>`;
+  return `<div class="expr">${hasOp ? esc(expr) : ''}</div>
+    <div class="val num" style="color:${color};${to && !v ? 'opacity:.35' : ''}">${money(v, curOf(to ? A.to : A.acc))}</div>`;
 }
 function refreshAmounts() {
   $('#addAmt').innerHTML = addAmountHtml();
@@ -1263,20 +1368,23 @@ function renderAdd() {
   const accChipA = (field, sel, cls = 'grow') => {
     const a = ACC.get(sel);
     return `<button class="chip ${cls}" data-act="pickAcc" data-target="add" data-field="${field}">${a ? icon(a.icon, a.color, 'round') : icon('💼', '#64748b', 'round')}
-      <span style="min-width:0;text-align:left"><b>${a ? esc(a.name) : 'Выберите счёт'}</b><small>${a ? money(bal.get(a.id) || 0) : ''}</small></span></button>`;
+      <span style="min-width:0;text-align:left"><b>${a ? esc(a.name) : 'Выберите счёт'}</b><small>${a ? accMoney(a.id, bal) : ''}</small></span></button>`;
   };
   const dateChip = `<label class="chip datechip">📅 <span id="dateLbl">${dateLabel(A.date)}</span><input type="date" data-addf="date" value="${A.date}"></label>`;
-  const pair = A.type === 'transfer' || A.type === 'debt';
-  const types = [['income', '↙ Доход'], ['expense', '↗ Расход'], ['transfer', '⇄'], ['debt', '🤝']];
-  $('#add').innerHTML = `<div class="add-top"><button class="ibtn" data-act="closeAdd" aria-label="Закрыть">✕</button>
-      <div class="types">${types.map(([v, l]) => `<button class="t-${v} ${A.type === v ? 'on' : ''}" data-act="addType" data-v="${v}">${l}${v === 'transfer' && A.type === v ? ' Перевод' : v === 'debt' && A.type === v ? ' Долг' : ''}</button>`).join('')}</div>
-      ${A.id ? `<button class="del-link" data-act="delTx">Удалить</button>` : ''}</div>
+  const pair = A.type === 'transfer' || A.type === 'debt', cross = isCross();
+  const types = [['income', '↙', 'Доход'], ['expense', '↗', 'Расход'], ['transfer', '⇄', 'Перевод'], ['debt', '🤝', 'Долг']];
+  // between currencies: tap a card to choose which amount the keypad types into
+  const card = (f, inner) => `<div class="tcard ${cross && A.focus === f ? 'focus' : ''}" ${cross ? `data-act="focusAmt" data-f="${f}"` : ''}>${inner}</div>`;
+  $('#add').innerHTML = `<div class="add-head"><button class="ibtn" data-act="closeAdd" aria-label="Закрыть">✕</button>
+      <b>${A.id ? 'Изменение' : 'Новая операция'}</b>
+      ${A.id ? `<button class="del-link" data-act="delTx">Удалить</button>` : '<span style="width:42px"></span>'}</div>
+    <div class="types4">${types.map(([v, ic, l]) => `<button class="t-${v} ${A.type === v ? 'on' : ''}" data-act="addType" data-v="${v}"><span class="ti">${ic}</span>${l}</button>`).join('')}</div>
     ${pair ? `<div class="pair">
-        <div class="tcard">${accChipA('acc', A.acc, 'in-card')}<div class="tamt" id="addAmt">${addAmountHtml()}</div></div>
+        ${card('from', `${accChipA('acc', A.acc, 'in-card')}<div class="tamt" id="addAmt">${addAmountHtml()}</div>`)}
         <button class="swap" data-act="swapAcc" aria-label="Поменять счета местами">⇅</button>
-        <div class="tcard">${accChipA('to', A.to, 'in-card')}<div class="tamt" id="addAmt2">${addAmountHtml(true)}</div></div>
+        ${card('to', `${accChipA('to', A.to, 'in-card')}<div class="tamt" id="addAmt2">${addAmountHtml(true)}</div>`)}
       </div>
-      <div class="add-row" style="justify-content:flex-end">${dateChip}</div>`
+      <div class="add-row" style="align-items:center">${cross ? `<span class="small" style="flex:1;padding-left:4px">${usdRate() ? `1 $ = ${money(usdRate())}` : 'курс не указан'} · нижнюю сумму можно изменить</span>` : '<span style="flex:1"></span>'}${dateChip}</div>`
     : `<div class="amount" id="addAmt">${addAmountHtml()}</div>
       <div class="add-row">${accChipA('acc', A.acc)}${dateChip}</div>`}
     <div id="addCats">${addCatsHtml()}</div>
@@ -1316,13 +1424,15 @@ const dateSwipeEnd = e => {
 $('#add').addEventListener('touchend', dateSwipeEnd);
 $('#add').addEventListener('touchcancel', dateSwipeEnd);
 function pressKey(k) {
-  let e = A.expr;
+  const key = A.focus === 'to' && isCross() ? 'expr2' : 'expr';
+  if (key === 'expr2' && !A.manual2) { A.manual2 = true; A.expr2 = '0'; }
+  let e = A[key];
   const lastNum = e.split(/[+−×÷]/).pop();
   if (/\d/.test(k)) { if (e === '0') e = k; else if (/,\d\d$/.test(lastNum)) return; else e += k; }
   else if (k === ',') { if (!lastNum.includes(',')) e += lastNum === '' ? '0,' : ','; }
   else if (k === '⌫') { e = e.slice(0, -1) || '0'; }
   else { if (/[+−×÷]$/.test(e)) e = e.slice(0, -1) + k; else if (e !== '0') e += k; }
-  A.expr = e;
+  A[key] = e;
   refreshAmounts();
 }
 function saveTx() {
@@ -1335,7 +1445,9 @@ function saveTx() {
   else {
     if (!A.to) { toast('Выберите счёт, куда'); return; }
     if (A.to === A.acc) { toast('Счета должны отличаться'); return; }
-    t = Object.assign(base, {type: 'transfer', acc: A.acc, to: A.to, amount: v, toAmount: v, cat: '', sub: ''});
+    const v2 = toValue();
+    if (!(v2 > 0)) { toast('Укажите, сколько пришло на счёт, или курс доллара в «Ещё»'); return; }
+    t = Object.assign(base, {type: 'transfer', acc: A.acc, to: A.to, amount: v, toAmount: v2, cat: '', sub: ''});
   }
   if (A.id) Object.assign(S.tx.find(x => x.id === A.id), t);
   else S.tx.push(Object.assign({id: uid(), src: 'manual', created: Date.now()}, t));
@@ -1350,7 +1462,8 @@ const DETECT = {
   id: /^id$/i, account: /^account name$|^сч[её]т$/i, akind: /^account kind$/i,
   cat: /categ|катег/i, sub: /subcat|подкат/i, amount: /amount|sum|сумм/i, date: /date|дата|time|время/i,
   note: /note|comment|memo|descr|замет|коммент|описан|примеч/i, type: /^type$|^тип/i,
-  transfer: /^transfer account$|^перевод|счет зачисл/i, tkind: /^transfer account kind$/i, tamount: /^transfer amount$/i
+  transfer: /^transfer account$|^перевод|счет зачисл/i, tkind: /^transfer account kind$/i, tamount: /^transfer amount$/i,
+  acur: /^account currency$|^валюта$/i, tcur: /^transfer currency$/i
 };
 const FIELDS = [['cat', 'Категория'], ['sub', 'Подкатегория'], ['amount', 'Сумма'], ['date', 'Дата'], ['note', 'Заметка'], ['account', 'Счёт'], ['transfer', 'Перевод на счёт']];
 
@@ -1435,7 +1548,7 @@ function buildItems() {
     if (imp.invert) a = -a;
     const dt = map.date >= 0 ? parseDateTime(r[map.date]) : null;
     const it = {date: dt ? dt.date : today(), time: dt ? dt.time : '', ms: dt && dt.ms, amount: round2(a), note: col('note'), extId: col('id'),
-      account: col('account'), akind: col('akind'), cat: col('cat'), sub: col('sub'),
+      account: col('account'), akind: col('akind'), acur: col('acur'), tcur: col('tcur'), cat: col('cat'), sub: col('sub'),
       transfer: col('transfer'), tkind: col('tkind'), tamount: parseAmount(col('tamount'))};
     if (it.transfer && imp.skipTransfers && kindOf(it.tkind) !== 'debt' && kindOf(it.akind) !== 'debt') { skipped++; continue; }
     items.push(it);
@@ -1489,13 +1602,13 @@ function doImport() {
   const defAcc = S.accounts.find(a => a.kind !== 'debt') || ensureAccount('Основной', 'regular');
   let added = 0, dup = 0;
   for (const i of items) {
-    const acc = i.account ? ensureAccount(i.account, i.akind) : defAcc;
+    const acc = i.account ? ensureAccount(i.account, i.akind, i.acur) : defAcc;
     const base = {id: uid(), src: 'import', date: i.date, time: i.time, note: i.note};
     if (i.ms) base.created = i.ms;
     if (i.extId) base.extId = i.extId;
     let t;
     if (i.transfer) {
-      const other = ensureAccount(i.transfer, i.tkind), amt = Math.abs(i.amount), tam = Math.abs(i.tamount ?? amt);
+      const other = ensureAccount(i.transfer, i.tkind, i.tcur), amt = Math.abs(i.amount), tam = Math.abs(i.tamount ?? amt);
       t = Object.assign(base, i.amount < 0 ? {type: 'transfer', acc: acc.id, to: other.id, amount: amt, toAmount: tam} : {type: 'transfer', acc: other.id, to: acc.id, amount: tam, toAmount: amt});
     } else {
       const asExpense = i.amount < 0 || (i.cat && (expNames.has(norm(i.cat)) || (findCat('expense', i.cat) && !findCat('income', i.cat))));
@@ -1656,9 +1769,8 @@ function dragLoop() {
 }
 function applyOrder(kind, ids) {
   if (kind.startsWith('acc-')) {
-    const debt = kind === 'acc-debt', moved = ids.map(id => ACC.get(id));
-    const own = debt ? S.accounts.filter(a => a.kind !== 'debt') : moved, debts = debt ? moved : S.accounts.filter(a => a.kind === 'debt');
-    S.accounts = own.concat(debts);
+    const moved = kind.slice(4);
+    S.accounts = KINDS.flatMap(k => k === moved ? ids.map(id => ACC.get(id)) : S.accounts.filter(a => a.kind === k));
   } else if (kind.startsWith('cats-')) {
     const type = kind.slice(5);
     S.cats = ids.map(id => CAT.get(id)).concat(S.cats.filter(c => c.type !== type));
@@ -1777,7 +1889,9 @@ const ACT = {
     const name = $('#fName').value.trim(); if (!name) { toast('Введите название'); return; }
     const id = el.dataset.id, a = id ? ACC.get(id) : {id: uid()};
     if (!id && findAccount(name)) { toast('Такой счёт уже есть'); return; }
-    Object.assign(a, {name, kind: document.querySelector('input[name=fKind]:checked').value, initial: num($('#fInit').value),
+    const kind = document.querySelector('input[name=fKind]:checked').value;
+    Object.assign(a, {name, kind, cur: document.querySelector('input[name=fCur]:checked').value, initial: num($('#fInit').value),
+      goal: kind === 'savings' ? num($('#fGoal').value) || 0 : 0, goalDate: kind === 'savings' ? $('#fGoalDate').value : '',
       budgetCat: $('#fBudCat').value, icon: pickedIcon(), color: pickedColor() || a.color || PALETTE[0]});
     if (!id) S.accounts.push(a);
     save(); closeSheet(); render();
@@ -1802,7 +1916,7 @@ const ACT = {
     closeSheet();
     if (t === 'home') { homeAcc = id; homeLimit = 200; rememberAcc('homeAcc', id); render(); }
     else if (t === 'ana') { anaAcc = id; rememberAcc('anaAcc', id); render(); }
-    else { A[el.dataset.field] = id; renderAdd(); }
+    else { A[el.dataset.field] = id; A.manual2 = false; A.focus = 'from'; renderAdd(); }
   },
   pickIcon: el => {
     sheetDirty = true;
@@ -1893,7 +2007,21 @@ const ACT = {
     }
     renderAdd();
   },
-  swapAcc: () => { [A.acc, A.to] = [A.to, A.acc]; renderAdd(); },
+  swapAcc: () => {
+    // a typed arriving amount becomes the leaving one after the swap
+    if (isCross() && A.manual2) [A.expr, A.expr2] = [A.expr2, A.expr]; else A.manual2 = false;
+    [A.acc, A.to] = [A.to, A.acc]; A.focus = 'from'; renderAdd();
+  },
+  focusAmt: el => { A.focus = el.dataset.f; renderAdd(); },
+  setRate: () => openSheet(`<h2>Курс доллара</h2>
+    <p class="hint">Нужен, чтобы итоги «Всего на счетах», аналитика по всем счетам и бюджет учитывали долларовые счета в рублях. Обновляйте, когда курс заметно меняется.</p>
+    <label>1 $ =<input id="fRate" type="text" inputmode="decimal" value="${S.usdRate || ''}" placeholder="например 3,25"></label>
+    <div class="btns"><button class="btn" data-act="saveRate">Сохранить</button></div>`, null, true),
+  saveRate: () => {
+    const r = num($('#fRate').value);
+    if (!(r > 0)) { toast('Введите курс, например 3,25'); return; }
+    S.usdRate = r; save(); closeSheet(); render(); toast('Курс сохранён');
+  },
   pickCat: el => { A.cat = el.dataset.id; A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
   pickSub: el => { if (el.dataset.id) { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; } else A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
   catSearch: () => {
@@ -1946,6 +2074,7 @@ document.addEventListener('change', e => {
   else if (d.imp) { imp.map[d.imp] = +el.value; renderImpSummary(); }
   else if (d.impflag) { imp[d.impflag] = el.checked; renderImpSummary(); }
   else if (el.name === 'impmode') imp.mode = el.value;
+  else if (el.name === 'fKind') $('#goalBox').hidden = el.value !== 'savings';
 });
 
 $('#fileCsv').addEventListener('change', async e => {
