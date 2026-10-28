@@ -29,7 +29,7 @@
 }}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--bg);color:var(--text)}
-body{font:15px/1.4 -apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,sans-serif;
+body{font:15px/1.4 ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   padding:0 16px calc(env(safe-area-inset-bottom) + 150px);min-height:100vh;-webkit-text-size-adjust:100%}
 button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
 input,select,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--card2);border:1px solid transparent;
@@ -49,7 +49,7 @@ main{max-width:640px;margin:0 auto}
 /* header */
 .hdr{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(env(safe-area-inset-top) + 8px) 0 10px;margin:0 -16px;padding-left:16px;padding-right:16px;
   display:flex;align-items:center;gap:8px}
-.hdr h1{font-size:28px;margin:0;flex:1;letter-spacing:-.02em}
+.hdr h1{font-size:28px;margin:0;flex:1;font-weight:650;letter-spacing:-.01em}
 .hbtns{display:flex;gap:6px;margin-left:auto}
 .ibtn{width:42px;height:42px;border-radius:50%;background:var(--card);display:inline-flex;align-items:center;justify-content:center;font-size:18px}
 .ibtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
@@ -75,7 +75,7 @@ main{max-width:640px;margin:0 auto}
 /* hero total */
 .total{text-align:center;margin:6px 0 14px}
 .total .lbl{font-size:13px;color:var(--muted)}
-.total .big{font-size:42px;font-weight:700;letter-spacing:-.03em;margin:2px 0 4px}
+.total .big{font-size:42px;font-weight:600;letter-spacing:-.01em;margin:2px 0 4px}
 .total .flows{display:flex;gap:16px;justify-content:center;font-weight:600}
 
 /* search */
@@ -96,7 +96,7 @@ main{max-width:640px;margin:0 auto}
 /* cards */
 .card{background:var(--card);border-radius:18px;padding:14px 16px;margin:0 0 12px;box-shadow:var(--shadow)}
 .hero .lbl{font-size:13px;color:var(--muted)}
-.hero .big{font-size:32px;font-weight:700;letter-spacing:-.02em;margin:2px 0 10px}
+.hero .big{font-size:32px;font-weight:600;letter-spacing:-.01em;margin:2px 0 10px}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 12px}
 .grid .card{margin:0;display:block;width:100%}
 .stat .lbl{font-size:12px;color:var(--muted)}.stat .val{font-size:18px;font-weight:650;margin-top:2px}.stat .sub{font-size:11px;color:var(--muted);margin-top:2px}
@@ -196,6 +196,7 @@ main{max-width:640px;margin:0 auto}
 .sheet-wrap[hidden]{display:none}
 .sheet{background:var(--card);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:22px 22px 0 0;
   padding:8px 16px calc(env(safe-area-inset-bottom) + 20px);-webkit-overflow-scrolling:touch}
+.sheet:has(#catGrid){height:88vh}
 .sheet .card,.sheet .menu,.sheet .tx,.sheet .anarow{background:var(--card2)}
 .sheet input,.sheet select,.sheet textarea{background:var(--card2)}
 .grab{width:40px;height:5px;border-radius:9px;background:var(--line);margin:4px auto 12px}
@@ -235,7 +236,7 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 .types button.on.t-expense{color:var(--exp)}.types button.on.t-income{color:var(--inc)}.types button.on.t-transfer{color:#0a84ff}.types button.on.t-debt{color:#bf5af2}
 .amount{flex:1;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .amount .expr{font-size:16px;color:var(--muted);min-height:20px}
-.amount .val{font-size:52px;font-weight:700;letter-spacing:-.03em;line-height:1.1;word-break:break-all}
+.amount .val{font-size:52px;font-weight:600;letter-spacing:-.01em;line-height:1.1;word-break:break-all}
 .add-row{display:flex;gap:8px;margin:0 0 8px;overflow-x:auto}
 .add-row .chip{flex:none;background:var(--card)}
 .add-row .chip.grow{flex:1;min-width:0}
@@ -248,21 +249,30 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 .tcard{flex:1;min-height:110px;max-height:200px;background:var(--card);border-radius:22px;padding:10px;display:flex;flex-direction:column}
 .tcard .chip.in-card{align-self:flex-start;background:var(--card2);max-width:80%}
 .tamt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.tamt .val{font-size:42px;font-weight:700;letter-spacing:-.03em;line-height:1.1}
+.tamt .val{font-size:42px;font-weight:600;letter-spacing:-.01em;line-height:1.1}
 .tamt .expr{font-size:14px;color:var(--muted);min-height:18px}
 .swap{align-self:center;width:44px;height:44px;margin:-14px 0;position:relative;z-index:2;border-radius:50%;background:var(--card2);
   border:4px solid var(--bg);font-size:20px;display:flex;align-items:center;justify-content:center}
 .catpick{background:var(--card);border-radius:16px;padding:8px 6px 6px;margin:0 0 8px}
 .strip{display:flex;gap:6px;overflow-x:auto;padding:2px;scrollbar-width:none}
 .strip::-webkit-scrollbar{display:none}
-.strip button{flex:none;width:62px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);text-align:center}
-.strip button span.n{display:block;width:62px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.strip button .ic{width:46px;height:46px;font-size:23px;border-radius:14px;border:2px solid transparent}
-.strip button.on .ic{border-color:var(--text)}
-.strip button.on{color:var(--text);font-weight:600}
+.strip button,.cgrid button{flex:none;width:62px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted);text-align:center}
+.strip button span.n,.cgrid button span.n{display:block;width:62px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.strip button .ic,.cgrid button .ic{width:46px;height:46px;font-size:23px;border-radius:14px;border:2px solid transparent}
+.strip button.on .ic,.cgrid button.on .ic{border-color:var(--text)}
+.strip button.on,.cgrid button.on{color:var(--text);font-weight:600}
 .strip.subs{margin-top:6px;padding-top:6px;border-top:1px solid var(--line)}
 .strip.subs .ic{width:38px;height:38px;font-size:19px;border-radius:12px}
-.catq{margin:0 0 6px}
+.limrow{padding:9px 0;border-bottom:1px solid var(--line)}
+.limrow:last-child{border-bottom:0}
+.limrow .ln{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.limrow .amt{width:92px;flex:none;text-align:right;padding:8px 10px;background:var(--card)}
+.nolimit{margin-top:6px}
+.nolimit summary{color:var(--muted);font-weight:600;padding:8px 4px}
+.cgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px 4px;justify-items:center;margin-bottom:6px}
+.cgrid button,.cgrid button span.n{width:74px}
+.cgrid-title{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin:14px 4px 8px}
+.catsearch{position:sticky;top:30px;z-index:3;margin-bottom:4px}
 .keys{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:0 0 8px}
 .keys button{height:52px;border-radius:14px;background:var(--key);font-size:24px;text-align:center;font-weight:500}
 .keys button.op{background:var(--key2);font-size:22px}
@@ -546,7 +556,8 @@ function status(limit, spent) {
   if (spent / limit >= 0.85) return ['Почти всё', 'warn'];
   return ['В норме', 'ok'];
 }
-function needBackup() { return S.tx.length > 0 && (!S.lastBackup || Date.now() - S.lastBackup > 14 * 864e5); }
+// remind weekly unless a file copy or a cloud copy was made in the last 7 days
+function needBackup() { return S.tx.length > 0 && Date.now() - Math.max(S.lastBackup || 0, cloudCfg().last || 0) > 7 * 864e5; }
 const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const standalone = navigator.standalone === true || matchMedia('(display-mode: standalone)').matches;
 
@@ -555,6 +566,14 @@ let cur = periodOf(today());
 let tab = 'home', sub = '';
 let homeAcc = '', homeQ = '', searchOn = false, homeLimit = 200;
 let anaAcc = '', anaType = 'expense', anaOff = new Set();
+// the last chosen account is remembered; on the very first launch it's "Основной"
+function restoreAccChoice() {
+  const ui = S.ui || {}, main = (findAccount('Основной') || {}).id || '';
+  homeAcc = 'homeAcc' in ui ? ui.homeAcc : main;
+  anaAcc = 'anaAcc' in ui ? ui.anaAcc : main;
+}
+restoreAccChoice();
+function rememberAcc(key, id) { S.ui = Object.assign({}, S.ui, {[key]: id}); save(); }
 // date range shown on a screen: budget period (with ‹ ›), all time, or custom dates
 const VIEW = {home: {mode: 'all', from: '', to: ''}, ana: {mode: 'period', from: '', to: ''}, budget: {mode: 'period'}};
 let budMode = 'overview', catType = 'expense', accOrder = false, catOrder = false;
@@ -642,7 +661,13 @@ function txView(t, accId) {
     title: s ? s.name : c ? c.name : 'Без категории', subt: t.note || (s && c ? c.name : ''),
     amt: e, shown: signed(e), cls: e > 0 ? 'inc' : ''};
 }
-const sortTx = list => [...list].sort((a, b) => (b.date + (b.time || '')).localeCompare(a.date + (a.time || '')));
+// newest day first; within a day the most recently added first (imported ones by their Qalta timestamp)
+const stamp = t => t.created || (t.time ? new Date(t.date + 'T' + t.time).getTime() : 0);
+function sortTx(list) {
+  const idx = new Map(S.tx.map((t, i) => [t.id, i]));
+  return [...list].sort((a, b) => b.date.localeCompare(a.date) || stamp(b) - stamp(a) ||
+    (a.src === 'import' && b.src === 'import' ? idx.get(a.id) - idx.get(b.id) : idx.get(b.id) - idx.get(a.id)));
+}
 function txList(list, accId, limit) {
   const sorted = sortTx(list), shown = limit ? sorted.slice(0, limit) : sorted;
   const sums = new Map();
@@ -677,6 +702,7 @@ function vWelcome() {
   return `<div class="hdr"><h1>Бюджет</h1></div>
   <div class="empty"><img class="logo" src="icon-192.png" alt=""><h2>Учёт и планирование</h2><p>Данные хранятся только на этом устройстве.</p></div>
   <button class="btn wide" data-act="restore">Восстановить из резервной копии</button>
+  <button class="btn ghost wide" data-act="cloudRestoreForm">Восстановить из облака (GitHub)</button>
   <button class="btn ghost wide" data-act="import">Перенести всё из Qalta (CSV)</button>
   <button class="btn ghost wide" data-act="starter">Начать с типовых категорий</button>
   ${installBanner()}`;
@@ -699,7 +725,7 @@ function vHome() {
   let h = `<div class="hdr">${accChip('home', homeAcc, bal)}
     <div class="hbtns"><button class="ibtn ${searchOn ? 'on' : ''}" data-act="search" aria-label="Поиск"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg></button></div></div>
     ${searchOn ? `<div class="search"><input type="search" data-search value="${esc(homeQ)}" placeholder="Поиск по заметке, категории, сумме"></div>` : ''}
-    ${needBackup() ? `<div class="banner">Резервной копии ${S.lastBackup ? 'не было больше двух недель' : 'ещё нет'}. Если удалить иконку приложения, данные пропадут.
+    ${needBackup() ? `<div class="banner">Резервной копии ${S.lastBackup || cloudCfg().last ? 'не было больше недели' : 'ещё нет'}. Если удалить иконку приложения, данные пропадут.
       <div class="row"><button class="btn small" data-act="backup">Сделать копию</button></div></div>` : ''}
     ${installBanner()}
     <div class="total"><div class="lbl">${q ? 'Найдено' : homeAll ? (homeAcc ? 'Остаток на счёте' : 'Всего на счетах') : 'Итог за период'}</div>
@@ -778,7 +804,7 @@ function donut(rows, total) {
     }
   } else svg += `<circle cx="150" cy="150" r="90" fill="none" stroke="var(--track)" stroke-width="44"/>`;
   return svg + `<text x="150" y="140" text-anchor="middle" font-size="14" fill-opacity=".6">Итого</text>
-    <text x="150" y="168" text-anchor="middle" font-size="26" font-weight="700">${esc(money(total))}</text></svg>`;
+    <text x="150" y="168" text-anchor="middle" font-size="26" font-weight="600">${esc(money(total))}</text></svg>`;
 }
 function vAnalytics() {
   if (anaAcc && !ACC.has(anaAcc)) anaAcc = '';
@@ -830,8 +856,9 @@ function vOverview() {
       <div class="bar"><i class="${sc}" style="width:${Math.max(0, w)}%"></i></div>
       <div class="r2 num"><span>${money(sp)} из ${money(lim)}</span><span class="${lim - sp < -0.005 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div></button>`;
   }
-  const hidden = S.cats.filter(c => c.type === 'expense' && catLimit(r.L, c) <= 0 && !(r.cat.get(c.id))).length;
-  if (hidden) h += `<p class="hint" style="text-align:center">Категорий без лимита и трат: ${hidden}. Лимиты задаются во вкладке «План».</p>`;
+  const hidden = S.cats.filter(c => c.type === 'expense' && catLimit(r.L, c) <= 0 && !(r.cat.get(c.id)));
+  if (hidden.length) h += `<details class="nolimit"><summary>Категории без лимита (${hidden.length})</summary>
+    ${hidden.map(c => `<button class="tx" data-act="budCat" data-id="${c.id}">${icon(c.icon, c.color, 'sm')}<span class="t"><b>${esc(c.name)}</b></span><span class="small">+ лимит</span></button>`).join('')}</details>`;
   return h;
 }
 function vPlan() {
@@ -877,6 +904,7 @@ function vMore() {
     <button data-act="backup">${icon('💾', '#22c55e', 'sm')}<span>Сделать резервную копию<br><small class="muted">последняя: ${S.lastBackup ? new Date(S.lastBackup).toLocaleDateString('ru-RU') : 'не делалась'}</small></span></button>
     <button data-act="restore">${icon('♻️', '#14b8a6', 'sm')}<span>Восстановить из копии</span></button>
   </div>
+  ${cloudCard()}
   <section class="card"><label style="margin:0">Бюджетный месяц начинается с числа<select data-startday>
       ${Array.from({length: 31}, (_, i) => i + 1).map(d => `<option value="${d}" ${(S.startDay || 1) === d ? 'selected' : ''}>${d}${d === 1 ? ' (календарный месяц)' : ''}</option>`).join('')}
     </select></label>
@@ -921,10 +949,12 @@ function openSheet(html, ctx = null, form = false) {
   sheetCtx = ctx; sheetForm = form; sheetDirty = false;
 }
 // reopens the sheet an operation was opened from, after editing it
-let sheetCtx = null, sheetForm = false, sheetDirty = false;
+let sheetCtx = null, sheetForm = false, sheetDirty = false, budViewStale = false;
 function closeSheet() {
   $('#sheet').hidden = true; document.body.style.overflow = A ? 'hidden' : ''; imp = null; sheetCtx = null;
   const el = $('.sheet'); el.style.transition = ''; el.style.transform = '';
+  // limits were edited in the sheet: refresh the overview behind it
+  if (budViewStale) { budViewStale = false; save(); render(); }
 }
 // closing by the user (✕, backdrop, swipe), as opposed to after Save
 function requestClose(animated) {
@@ -1035,16 +1065,34 @@ function sheetAnaCat(id, sid) {
 function sheetBudCat(id) {
   const c = CAT.get(id), r = budgetCalc(cur), lim = catLimit(r.L, c), sp = r.cat.get(id) || 0;
   const list = S.tx.filter(t => { if (t.date < r.a || t.date > r.b) return false; const k = budKey(t, r.inB); return k && k[0] === id; });
-  const rows = [{name: c.name + ' (общее)', icon: c.icon, key: id + ':own', lim: num(r.L[id])}].concat(c.subs.map(s => ({name: s.name, icon: s.icon, key: s.id, lim: num(r.L[s.id])})));
+  // limits are edited right here: each row shows what's spent next to its limit field
+  const rows = [{name: c.subs.length ? c.name + ' (общее)' : 'Лимит', icon: c.subs.length ? c.icon : '', key: id + ':own', lid: id}]
+    .concat(c.subs.map(s => ({name: s.name, icon: s.icon, key: s.id, lid: s.id})));
   openSheet(`<h2>${esc(c.icon)} ${esc(c.name)}</h2>
-    <div class="row small num"><span>Потрачено ${money(sp)} из ${money(lim)}</span><span class="${lim - sp < 0 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div>
-    ${c.subs.length ? `<h3>По подкатегориям</h3><div class="card">${rows.filter(x => x.lim > 0 || r.sub.get(x.key)).map(x => {
-      const v = r.sub.get(x.key) || 0, [, sc] = status(x.lim, v), w = x.lim > 0 ? Math.min(100, v / x.lim * 100) : (v > 0 ? 100 : 0);
-      return `<div style="padding:5px 0"><div class="row"><span>${esc(x.icon)} ${esc(x.name)}</span><span class="small num">${money(v)} / ${money(x.lim)}</span></div>
-        <div class="bar" style="height:5px;margin-top:4px"><i class="${sc}" style="width:${Math.max(0, w)}%"></i></div></div>`;
-    }).join('') || '<span class="muted">Нет данных</span>'}</div>` : ''}
-    <h3>Операции</h3>${list.length ? txList(list, '') : '<p class="muted">Пока нет.</p>'}
-    <div class="btns"><button class="btn ghost" data-act="goPlan">Изменить лимиты</button></div>`, () => sheetBudCat(id));
+    <div id="bcTotals">${budCatTotals(id)}</div>
+    <h3>${c.subs.length ? 'Лимиты по подкатегориям' : 'Лимит на месяц'}</h3>
+    <div class="card" data-bcid="${id}">${rows.map(x => `<div class="limrow" data-key="${x.key}">
+      <div class="row"><span class="ln">${esc(x.icon)} ${esc(x.name)}</span>
+        <span class="small num" data-spent>${money(r.sub.get(x.key) || 0)} из</span>
+        <input class="amt" type="text" inputmode="decimal" data-lim="${x.lid}" value="${r.L[x.lid] || ''}" placeholder="0"></div>
+      <div class="bar" style="height:5px;margin-top:6px"><i data-bar></i></div></div>`).join('')}</div>
+    ${bget(cur).inherited ? '<p class="hint">Лимиты взяты из прошлого месяца. Изменение создаст план этого месяца.</p>' : ''}
+    <h3>Операции</h3>${list.length ? txList(list, '') : '<p class="muted">Пока нет.</p>'}`, () => sheetBudCat(id));
+  paintBudCat(id);
+}
+function budCatTotals(id) {
+  const c = CAT.get(id), r = budgetCalc(cur), lim = catLimit(r.L, c), sp = r.cat.get(id) || 0;
+  return `<div class="row small num"><span>Потрачено ${money(sp)} из ${money(lim)}</span><span class="${lim - sp < 0 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div>`;
+}
+// recolour the bars in an open category sheet after a limit changes
+function paintBudCat(id) {
+  const r = budgetCalc(cur);
+  for (const row of document.querySelectorAll(`[data-bcid="${id}"] .limrow`)) {
+    const v = r.sub.get(row.dataset.key) || 0, lim = num(row.querySelector('[data-lim]').value);
+    const [, sc] = status(lim, v), w = lim > 0 ? Math.min(100, v / lim * 100) : (v > 0 ? 100 : 0);
+    const bar = row.querySelector('[data-bar]'); bar.className = sc; bar.style.width = Math.max(0, w) + '%';
+  }
+  $('#bcTotals').innerHTML = budCatTotals(id);
 }
 
 // ---------- add / edit operation ----------
@@ -1092,24 +1140,29 @@ function refreshAmounts() {
   $('#addAmt').innerHTML = addAmountHtml();
   if ($('#addAmt2')) $('#addAmt2').innerHTML = addAmountHtml(true);
 }
+const catBtn = (act, id, ic, color, name, on) => `<button data-act="${act}" data-id="${id}" class="${on ? 'on' : ''}">${icon(ic, color)}<span class="n">${esc(name)}</span></button>`;
 function addCatsHtml() {
   if (A.type !== 'expense' && A.type !== 'income') return '';
-  const cats = S.cats.filter(c => c.type === A.type), q = norm(A.q);
-  const btn = (act, id, ic, color, name, on, extra = '') => `<button data-act="${act}" data-id="${id}" ${extra} class="${on ? 'on' : ''}">${icon(ic, color)}<span class="n">${esc(name)}</span></button>`;
-  let h = `<div class="catpick"><input class="catq" type="search" data-catq value="${esc(A.q)}" placeholder="Поиск категории" style="background:var(--card2)">`;
-  if (q) {
-    const hits = [];
-    for (const c of cats) {
-      if (norm(c.name).includes(q)) hits.push(btn('pickCat', c.id, c.icon, c.color, c.name, A.cat === c.id && !A.sub));
-      for (const s of c.subs) if (norm(s.name).includes(q)) hits.push(btn('pickSub', s.id, s.icon, s.color, s.name, A.sub === s.id));
-    }
-    h += `<div class="strip">${hits.join('') || '<span class="small" style="padding:10px">Ничего не найдено</span>'}</div>`;
-  } else {
-    h += `<div class="strip">${btn('pickCat', '', '❔', '#64748b', 'Без категории', !A.cat)}${cats.map(c => btn('pickCat', c.id, c.icon, c.color, c.name, A.cat === c.id)).join('')}</div>`;
-    const c = CAT.get(A.cat);
-    if (c && c.subs.length) h += `<div class="strip subs">${btn('pickSub', '', c.icon, c.color, 'Вся категория', !A.sub)}${c.subs.map(s => btn('pickSub', s.id, s.icon, s.color, s.name, A.sub === s.id)).join('')}</div>`;
-  }
+  const cats = S.cats.filter(c => c.type === A.type);
+  let h = `<div class="catpick"><div class="strip">${catBtn('catSearch', '', '🔍', '#64748b', 'Поиск', false)}${catBtn('pickCat', '', '❔', '#64748b', 'Без категории', !A.cat)}${cats.map(c => catBtn('pickCat', c.id, c.icon, c.color, c.name, A.cat === c.id)).join('')}</div>`;
+  const c = CAT.get(A.cat);
+  if (c && c.subs.length) h += `<div class="strip subs">${catBtn('pickSub', '', c.icon, c.color, 'Вся категория', !A.sub)}${c.subs.map(s => catBtn('pickSub', s.id, s.icon, s.color, s.name, A.sub === s.id)).join('')}</div>`;
   return h + `</div>`;
+}
+function scrollStripToSelected() {
+  for (const b of document.querySelectorAll('#addCats .strip button.on')) b.scrollIntoView({block: 'nearest', inline: 'center'});
+}
+// all categories in a separate sheet, so the keyboard doesn't squeeze the entry screen
+function catGridHtml(q) {
+  q = norm(q);
+  let h = '';
+  for (const c of S.cats.filter(c => c.type === A.type)) {
+    const catHit = !q || norm(c.name).includes(q), subs = c.subs.filter(s => catHit || norm(s.name).includes(q));
+    if (!catHit && !subs.length) continue;
+    h += `<div class="cgrid-title">${esc(c.name)}</div><div class="cgrid">${catBtn('pickCatS', c.id, c.icon, c.color, c.subs.length ? c.name + ' (вся)' : c.name, A.cat === c.id && !A.sub)}
+      ${subs.map(s => catBtn('pickSubS', s.id, s.icon, s.color, s.name, A.sub === s.id)).join('')}</div>`;
+  }
+  return h || '<p class="muted" style="text-align:center;padding:20px">Ничего не найдено</p>';
 }
 function renderAdd() {
   const bal = balances();
@@ -1191,7 +1244,7 @@ function saveTx() {
     t = Object.assign(base, {type: 'transfer', acc: A.acc, to: A.to, amount: v, toAmount: v, cat: '', sub: ''});
   }
   if (A.id) Object.assign(S.tx.find(x => x.id === A.id), t);
-  else S.tx.push(Object.assign({id: uid(), src: 'manual'}, t));
+  else S.tx.push(Object.assign({id: uid(), src: 'manual', created: Date.now()}, t));
   S.lastAcc = A.acc;
   const edited = !!A.id;
   save(); closeAdd(); render(); toast(edited ? 'Изменено' : 'Сохранено');
@@ -1240,7 +1293,7 @@ function parseDateTime(s) {
   // ISO timestamp in UTC (Qalta): use local date and time, otherwise late-night operations shift a day
   if (/^\d{4}-\d{2}-\d{2}T[\d:.]+(Z|[+-]\d{2}:?\d{2})$/.test(s)) {
     const d = new Date(s);
-    if (!isNaN(d)) return {date: iso(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes())};
+    if (!isNaN(d)) return {date: iso(d), time: pad(d.getHours()) + ':' + pad(d.getMinutes()), ms: d.getTime()};
   }
   const time = (s.match(/(\d{1,2}):(\d{2})/) || []).slice(1).map(x => pad(+x)).join(':');
   const ok = (y, mo, d) => { mo = +mo; d = +d; if (mo > 12 && d <= 12) [mo, d] = [d, mo]; return mo >= 1 && mo <= 12 && d >= 1 && d <= 31 ? y + '-' + pad(mo) + '-' + pad(d) : null; };
@@ -1287,7 +1340,7 @@ function buildItems() {
     }
     if (imp.invert) a = -a;
     const dt = map.date >= 0 ? parseDateTime(r[map.date]) : null;
-    const it = {date: dt ? dt.date : today(), time: dt ? dt.time : '', amount: round2(a), note: col('note'), extId: col('id'),
+    const it = {date: dt ? dt.date : today(), time: dt ? dt.time : '', ms: dt && dt.ms, amount: round2(a), note: col('note'), extId: col('id'),
       account: col('account'), akind: col('akind'), cat: col('cat'), sub: col('sub'),
       transfer: col('transfer'), tkind: col('tkind'), tamount: parseAmount(col('tamount'))};
     if (it.transfer && imp.skipTransfers && kindOf(it.tkind) !== 'debt' && kindOf(it.akind) !== 'debt') { skipped++; continue; }
@@ -1344,6 +1397,7 @@ function doImport() {
   for (const i of items) {
     const acc = i.account ? ensureAccount(i.account, i.akind) : defAcc;
     const base = {id: uid(), src: 'import', date: i.date, time: i.time, note: i.note};
+    if (i.ms) base.created = i.ms;
     if (i.extId) base.extId = i.extId;
     let t;
     if (i.transfer) {
@@ -1361,7 +1415,7 @@ function doImport() {
   }
   const dolg = findCat('expense', 'Долг');
   for (const a of S.accounts) if (a.kind === 'debt' && dolg && !a.budgetCat) a.budgetCat = dolg.id;
-  save(); closeSheet(); tab = 'home'; render();
+  save(); closeSheet(); tab = 'home'; restoreAccChoice(); render();
   toast(`Загружено ${added}${dup ? `, уже были: ${dup}` : ''}`);
 }
 function plural(n, a, b, c) { const k = n % 100, j = n % 10; return k > 10 && k < 20 ? c : j === 1 ? a : j >= 2 && j <= 4 ? b : c; }
@@ -1380,17 +1434,110 @@ async function doBackup() {
   setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
   done();
 }
-async function restoreFrom(file) {
-  try {
-    const obj = JSON.parse(await readText(file));
-    const d = obj && obj.data ? obj.data : obj;
-    if (!d || (typeof d.months !== 'object' && !Array.isArray(d.tx))) throw new Error('это не файл резервной копии');
-    if ((S.tx.length || S.accounts.length) && !confirm('Заменить текущие данные данными из копии?')) return;
-    const keepBackup = S;
-    try { S = migrate(d); } catch (e) { S = keepBackup; throw e; }
-    save(); cur = periodOf(today()); tab = 'home'; render(); toast('Данные восстановлены');
-  } catch (e) { toast('Не удалось прочитать файл: ' + e.message); }
+// returns false if the user declined to replace the current data
+function applyBackupText(text) {
+  const obj = JSON.parse(text);
+  const d = obj && obj.data ? obj.data : obj;
+  if (!d || (typeof d.months !== 'object' && !Array.isArray(d.tx))) throw new Error('это не файл резервной копии');
+  if ((S.tx.length || S.accounts.length) && !confirm('Заменить текущие данные данными из копии?')) return false;
+  const keepBackup = S;
+  try { S = migrate(d); } catch (e) { S = keepBackup; throw e; }
+  save(); cur = periodOf(today()); tab = 'home'; restoreAccChoice(); render(); toast('Данные восстановлены');
+  return true;
 }
+async function restoreFrom(file) {
+  try { applyBackupText(await readText(file)); }
+  catch (e) { toast('Не удалось прочитать файл: ' + e.message); }
+}
+
+// ---------- automatic encrypted backup to a private GitHub gist ----------
+// The token and password live in their own storage key, so they never end up inside backups.
+const CLOUD_KEY = 'budget-cloud', GIST_FILE = 'budget-backup.enc.json', GIST_DESC = 'Бюджет — зашифрованная резервная копия';
+function cloudCfg() { try { return JSON.parse(localStorage.getItem(CLOUD_KEY)) || {}; } catch (e) { return {}; } }
+function setCloud(patch) {
+  const c = Object.assign(cloudCfg(), patch);
+  try { localStorage.setItem(CLOUD_KEY, JSON.stringify(c)); } catch (e) {}
+  return c;
+}
+function b64(buf) {
+  const u = new Uint8Array(buf); let s = '';
+  for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function unb64(s) { const bin = atob(s), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u; }
+function hashStr(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); }
+async function deriveKey(pass, salt) {
+  const base = await crypto.subtle.importKey('raw', new TextEncoder().encode(pass), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey({name: 'PBKDF2', salt, iterations: 200000, hash: 'SHA-256'}, base, {name: 'AES-GCM', length: 256}, false, ['encrypt', 'decrypt']);
+}
+async function encryptText(text, pass) {
+  const salt = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, await deriveKey(pass, salt), new TextEncoder().encode(text));
+  return JSON.stringify({app: 'budget-pwa', enc: 'AES-GCM, PBKDF2-SHA256 200000', savedAt: new Date().toISOString(), salt: b64(salt), iv: b64(iv), data: b64(ct)});
+}
+async function decryptText(json, pass) {
+  const o = JSON.parse(json);
+  try { return new TextDecoder().decode(await crypto.subtle.decrypt({name: 'AES-GCM', iv: unb64(o.iv)}, await deriveKey(pass, unb64(o.salt)), unb64(o.data))); }
+  catch (e) { throw new Error('неверный пароль'); }
+}
+async function gh(path, token, method = 'GET', body) {
+  const r = await fetch('https://api.github.com' + path, {method, body: body && JSON.stringify(body),
+    headers: Object.assign({'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token}, body ? {'Content-Type': 'application/json'} : {})});
+  if (!r.ok) throw new Error(r.status === 401 ? 'ключ GitHub не подходит или отозван' : r.status === 404 ? 'не найдено' : r.status === 403 ? 'у ключа нет доступа к гистам' : 'GitHub ответил ' + r.status);
+  return r.json();
+}
+let cloudBusy = false;
+async function cloudUpload(force) {
+  const c = cloudCfg(); if (!c.token || !c.pass || cloudBusy) return false;
+  const plain = JSON.stringify(S), sig = plain.length + '-' + hashStr(plain);
+  if (!force && c.lastSig === sig) return false;
+  cloudBusy = true;
+  try {
+    const files = {[GIST_FILE]: {content: await encryptText(JSON.stringify({app: 'budget-pwa', version: 2, exportedAt: new Date().toISOString(), data: S}), c.pass)}};
+    let id = c.gistId;
+    if (id) { try { await gh('/gists/' + id, c.token, 'PATCH', {description: GIST_DESC, files}); } catch (e) { if (e.message === 'не найдено') id = ''; else throw e; } }
+    if (!id) id = (await gh('/gists', c.token, 'POST', {description: GIST_DESC, public: false, files})).id;
+    setCloud({gistId: id, last: Date.now(), lastSig: sig, error: ''});
+    return true;
+  } catch (e) { setCloud({error: e.message}); throw e; }
+  finally { cloudBusy = false; }
+}
+// on opening / leaving the app: only when something changed, and not more often than every 3 hours
+async function cloudAuto() {
+  const c = cloudCfg();
+  if (!c.token || !navigator.onLine || (c.last && Date.now() - c.last < 3 * 3600e3)) return;
+  try { if (await cloudUpload(false) && tab === 'more') render(); } catch (e) { if (tab === 'more') render(); }
+}
+async function cloudRestore(token, pass) {
+  let id = cloudCfg().gistId;
+  if (!id) {
+    const list = await gh('/gists?per_page=100', token);
+    const g = list.find(x => x.files && x.files[GIST_FILE]);
+    if (!g) throw new Error('на GitHub нет копии бюджета');
+    id = g.id;
+  }
+  const g = await gh('/gists/' + id, token), f = g.files[GIST_FILE];
+  if (!f) throw new Error('на GitHub нет копии бюджета');
+  const content = f.truncated ? await (await fetch(f.raw_url)).text() : f.content;
+  const text = await decryptText(content, pass);
+  if (applyBackupText(text)) setCloud({token, pass, gistId: id, last: Date.now(), lastSig: '', error: ''});
+}
+const fmtWhen = ms => { const d = new Date(ms); return (iso(d) === today() ? 'сегодня' : d.toLocaleDateString('ru-RU')) + ' в ' + pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+function cloudCard() {
+  const c = cloudCfg();
+  if (!c.token) return `<section class="card"><b>☁️ Автокопия в облако</b>
+    <p class="hint">Раз в день приложение само отправляет зашифрованную копию в ваш закрытый гист на GitHub. Если удалите иконку или смените телефон — восстановите по паролю.</p>
+    <div class="btns"><button class="btn" data-act="cloudSetup">Настроить</button><button class="btn ghost" data-act="cloudRestoreForm">Восстановить</button></div></section>`;
+  return `<section class="card"><b>☁️ Автокопия в облако включена</b>
+    <p class="hint">${c.last ? 'Последняя копия: ' + fmtWhen(c.last) : 'Копий ещё не было'}${c.error ? `<br><span class="neg">Ошибка: ${esc(c.error)}</span>` : ''}</p>
+    <div class="btns"><button class="btn" data-act="cloudNow">Отправить сейчас</button><button class="btn ghost" data-act="cloudRestoreForm">Восстановить</button></div>
+    <div class="btns" style="margin-top:8px"><button class="btn small ghost" data-act="cloudOff" style="flex:none">Отключить</button></div></section>`;
+}
+const TOKEN_STEPS = `<ol class="steps">
+  <li>На github.com: фото профиля → <b>Settings</b> → внизу слева <b>Developer settings</b>.</li>
+  <li><b>Personal access tokens</b> → <b>Tokens (classic)</b> → <b>Generate new token (classic)</b>.</li>
+  <li>Note: «Бюджет», Expiration: <b>No expiration</b>, отметьте только галочку <b>gist</b>.</li>
+  <li><b>Generate token</b> → скопируйте ключ (начинается с <b>ghp_</b>) и вставьте ниже.</li></ol>`;
 
 // ---------- toast ----------
 let toastTimer;
@@ -1480,13 +1627,56 @@ const ACT = {
     <details><summary>Или вставить текст таблицы</summary><textarea id="pasteArea" rows="6"></textarea>
     <div class="btns"><button class="btn ghost" data-act="parsePaste">Разобрать</button></div></details>`, null, true),
   closeX: () => requestClose(false),
+  cloudSetup: () => openSheet(`<h2>☁️ Автокопия в облако</h2>
+    <p class="hint">Нужен бесплатный ключ GitHub с доступом только к гистам (скрытым заметкам). Копия шифруется вашим паролем ещё в телефоне — без пароля её никто не прочтёт, даже GitHub.</p>
+    ${TOKEN_STEPS}
+    <label>Ключ GitHub<input id="cToken" type="password" autocomplete="off" placeholder="ghp_…"></label>
+    <label>Пароль для шифрования<input id="cPass" type="password" autocomplete="new-password" placeholder="не короче 6 символов"></label>
+    <label>Пароль ещё раз<input id="cPass2" type="password" autocomplete="new-password"></label>
+    <p class="hint" style="color:var(--warn)">Запишите пароль. Если его забыть, копию расшифровать будет невозможно.</p>
+    <div class="btns"><button class="btn" data-act="cloudSave">Включить и отправить копию</button></div>`, null, true),
+  cloudSave: async el => {
+    const token = $('#cToken').value.trim(), pass = $('#cPass').value;
+    if (!token) { toast('Вставьте ключ GitHub'); return; }
+    if (pass.length < 6) { toast('Пароль — не короче 6 символов'); return; }
+    if (pass !== $('#cPass2').value) { toast('Пароли не совпадают'); return; }
+    el.disabled = true; el.textContent = 'Отправляю…';
+    setCloud({token, pass, gistId: '', last: 0, lastSig: '', error: ''});
+    try { await cloudUpload(true); closeSheet(); render(); toast('Готово: копия в облаке'); }
+    catch (e) { setCloud({token: '', pass: ''}); el.disabled = false; el.textContent = 'Включить и отправить копию'; toast('Не получилось: ' + e.message); }
+  },
+  cloudNow: async el => {
+    el.disabled = true; el.textContent = 'Отправляю…';
+    try { await cloudUpload(true); toast('Копия отправлена'); } catch (e) { toast('Не получилось: ' + e.message); }
+    render();
+  },
+  cloudOff: () => {
+    if (!confirm('Отключить автокопию? Последняя копия останется на GitHub.')) return;
+    setCloud({token: '', pass: '', error: ''}); render();
+  },
+  cloudRestoreForm: () => {
+    const c = cloudCfg();
+    openSheet(`<h2>Восстановить из облака</h2>
+      <p class="hint">Нужны ключ GitHub и пароль, которые вы вводили при настройке автокопии.</p>
+      <details><summary>Где взять ключ, если его нет</summary>${TOKEN_STEPS}</details>
+      <label>Ключ GitHub<input id="cToken" type="password" autocomplete="off" value="${esc(c.token || '')}" placeholder="ghp_…"></label>
+      <label>Пароль<input id="cPass" type="password" autocomplete="current-password"></label>
+      <div class="btns"><button class="btn" data-act="cloudRestoreGo">Восстановить</button></div>`, null, true);
+  },
+  cloudRestoreGo: async el => {
+    const token = $('#cToken').value.trim(), pass = $('#cPass').value;
+    if (!token || !pass) { toast('Введите ключ и пароль'); return; }
+    el.disabled = true; el.textContent = 'Загружаю…';
+    try { sheetDirty = false; await cloudRestore(token, pass); closeSheet(); render(); }
+    catch (e) { el.disabled = false; el.textContent = 'Восстановить'; toast('Не получилось: ' + e.message); }
+  },
   pickCsv: () => $('#fileCsv').click(),
   parsePaste: () => { const t = $('#pasteArea').value; if (t.trim()) startImport(t); },
   doImport: () => doImport(),
   close: () => closeSheet(),
   wipe: () => { if (!confirm('Удалить все данные на этом устройстве? Это нельзя отменить.')) return; S = blank(); save(); tab = 'home'; render(); },
   // accounts
-  openAcc: el => { homeAcc = el.dataset.id; tab = 'home'; render(); scrollTo(0, 0); },
+  openAcc: el => { homeAcc = el.dataset.id; rememberAcc('homeAcc', homeAcc); tab = 'home'; render(); scrollTo(0, 0); },
   editAcc: el => sheetAccount(el.dataset.id),
   newAcc: () => sheetAccount(''),
   saveAcc: el => {
@@ -1516,8 +1706,8 @@ const ACT = {
   setAcc: el => {
     const t = el.dataset.target, id = el.dataset.id;
     closeSheet();
-    if (t === 'home') { homeAcc = id; homeLimit = 200; render(); }
-    else if (t === 'ana') { anaAcc = id; render(); }
+    if (t === 'home') { homeAcc = id; homeLimit = 200; rememberAcc('homeAcc', id); render(); }
+    else if (t === 'ana') { anaAcc = id; rememberAcc('anaAcc', id); render(); }
     else { A[el.dataset.field] = id; renderAdd(); }
   },
   pickIcon: el => {
@@ -1609,8 +1799,15 @@ const ACT = {
     renderAdd();
   },
   swapAcc: () => { [A.acc, A.to] = [A.to, A.acc]; renderAdd(); },
-  pickCat: el => { A.cat = el.dataset.id; A.sub = ''; if (A.q) { A.q = ''; } $('#addCats').innerHTML = addCatsHtml(); },
-  pickSub: el => { if (el.dataset.id) { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; } else A.sub = ''; A.q = ''; $('#addCats').innerHTML = addCatsHtml(); },
+  pickCat: el => { A.cat = el.dataset.id; A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
+  pickSub: el => { if (el.dataset.id) { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; } else A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
+  catSearch: () => {
+    openSheet(`<h2>Категория</h2><input class="catsearch" type="search" data-catsearch placeholder="Поиск категории" autocomplete="off">
+      <div id="catGrid">${catGridHtml('')}</div>`);
+    $('[data-catsearch]').focus();
+  },
+  pickCatS: el => { A.cat = el.dataset.id; A.sub = ''; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
+  pickSubS: el => { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
   key: el => pressKey(el.dataset.k),
   saveTx: () => saveTx(),
   delTx: () => { if (!confirm('Удалить операцию?')) return; S.tx = S.tx.filter(t => t.id !== A.id); save(); closeAdd(); render(); toast('Удалено'); }
@@ -1625,14 +1822,17 @@ document.addEventListener('click', e => {
 document.addEventListener('input', e => {
   const el = e.target, d = el.dataset;
   if ('search' in d) { homeQ = el.value; homeLimit = 200; const tmp = document.createElement('div'); tmp.innerHTML = vHome(); $('#homeList').innerHTML = tmp.querySelector('#homeList').innerHTML; return; }
-  if ('catq' in d) { A.q = el.value; const pos = el.selectionStart; $('#addCats').innerHTML = addCatsHtml(); const n = $('[data-catq]'); n.focus(); n.setSelectionRange(pos, pos); return; }
+  if ('catsearch' in d) { $('#catGrid').innerHTML = catGridHtml(el.value); return; }
   if (d.addf === 'note') { A.note = el.value; return; }
   if ('currency' in d) { S.currency = el.value.trim(); saveSoon(); return; }
   if ('lim' in d) {
     const b = bmut(cur); b.limits[d.lim] = num(el.value);
-    const card = el.closest('[data-cid]'), c = CAT.get(card.dataset.cid);
-    card.querySelector('[data-total]').textContent = money(catLimit(b.limits, c));
-    $('#plansum').innerHTML = planSum(cur); saveSoon(); return;
+    const card = el.closest('[data-cid]');
+    if (card) card.querySelector('[data-total]').textContent = money(catLimit(b.limits, CAT.get(card.dataset.cid)));
+    if ($('#plansum')) $('#plansum').innerHTML = planSum(cur);
+    const sheetCard = el.closest('[data-bcid]');
+    if (sheetCard) { paintBudCat(sheetCard.dataset.bcid); budViewStale = true; }
+    saveSoon(); return;
   }
   if ('income' in d) { bmut(cur).income = el.value.trim() === '' ? null : num(el.value); $('#plansum').innerHTML = planSum(cur); saveSoon(); }
 });
@@ -1663,6 +1863,8 @@ render();
 if (localStorage.getItem(KEY) && !JSON.parse(localStorage.getItem(KEY)).accounts) save(); // persist the v1 -> v2 migration
 
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
+setTimeout(cloudAuto, 3000);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') cloudAuto(); });
 </script>
 </body>
 </html>
