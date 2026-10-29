@@ -99,6 +99,9 @@ main{max-width:640px;margin:0 auto}
 #undo.on{opacity:1;transform:none;pointer-events:auto}
 #undo button{color:var(--accent);font-weight:700;padding:6px 10px;filter:brightness(.8)}
 .tx:active,.cat:active,.arow button:active{opacity:.7}
+.swr .tx:active{opacity:1;background:var(--card2)}
+.sheet .swr .tx:active{background:var(--line)}
+.swr-act{visibility:hidden}.swr.swiping .swr-act,.swr.open-l .swr-act,.swr.open-r .swr-act{visibility:visible}
 .tx .t{flex:1;min-width:0}
 .tx b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tx small{display:block;color:var(--muted);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -268,7 +271,9 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 .types button{flex:1;padding:8px 4px;border-radius:19px;font-weight:600;font-size:13.5px;color:var(--muted);text-align:center;white-space:nowrap}
 .types button.on{background:var(--card2);color:var(--text)}
 .types button.on.t-expense{color:var(--exp)}.types button.on.t-income{color:var(--inc)}.types button.on.t-transfer{color:#0a84ff}.types button.on.t-debt{color:#bf5af2}
-.amount{flex:1;min-height:90px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
+.add-wrap>*{flex-shrink:0}
+.add-wrap{overflow-y:auto;-webkit-overflow-scrolling:touch}
+.amount{flex:1 0 auto;min-height:70px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
 .amount .expr{font-size:16px;color:var(--muted);min-height:20px}
 .amount .val{font-size:52px;font-weight:600;letter-spacing:-.01em;line-height:1.1;word-break:break-all}
 .add-row{display:flex;gap:8px;margin:0 0 8px;overflow-x:auto}
@@ -299,7 +304,7 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 .goal .bar{height:6px}.goal .bar i{background:var(--accent)}.goal .bar i.ok{background:var(--ok)}
 .goal .small{margin-top:4px}
 .datechip{touch-action:pan-y;min-width:132px;justify-content:center}
-.pair{flex:1;display:flex;flex-direction:column;justify-content:center;margin:10px 0 8px;min-height:0}
+.pair{flex:1 0 auto;display:flex;flex-direction:column;justify-content:center;margin:10px 0 8px;min-height:0}
 .tcard{flex:1;min-height:110px;max-height:200px;background:var(--card);border-radius:22px;padding:10px;display:flex;flex-direction:column}
 .tcard .chip.in-card{align-self:flex-start;background:var(--card2);max-width:80%}
 .tamt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center}
@@ -361,7 +366,7 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 <script>
 'use strict';
 const KEY = 'budget-app-v1';
-const APP_VERSION = 19;   // keep in step with VERSION in sw.js
+const APP_VERSION = 20;   // keep in step with VERSION in sw.js
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -850,9 +855,15 @@ function vAccounts() {
         ${hasSav ? `<div class="small">свободно ${money(totalBalance(bal, ['regular']))} · в накоплениях ${money(totalBalance(bal, ['savings']))}</div>` : ''}</div>${rateBanner()}`}
     ${block('regular', hasSav ? 'Счета' : '', hasSav)}
     ${block('savings', 'Накопления', true)}
-    ${block('debt', 'Долги', false)}
-    ${S.accounts.some(a => a.kind === 'debt') && !accOrder ? '<p class="hint">Положительный остаток долга — должны вам, отрицательный — должны вы.</p>' : ''}
+    ${block('debt', 'Долги', true)}
+    ${S.accounts.some(a => a.kind === 'debt') && !accOrder ? debtsLine(bal) : ''}
     ${accOrder ? '' : '<button class="btn ghost wide" style="margin-top:12px" data-act="newAcc">+ Новый счёт</button>'}`;
+}
+// a debt account's balance: positive — they owe me, negative — I owe (in BYN)
+function debtsLine(bal) {
+  let mine = 0, theirs = 0;
+  for (const a of S.accounts.filter(a => a.kind === 'debt')) { const v = toBYN(bal.get(a.id) || 0, a.cur); if (v > 0) theirs += v; else mine -= v; }
+  return `<p class="hint">Вам должны <b class="inc">${money(theirs)}</b> · вы должны <b class="${mine > 0 ? 'neg' : ''}">${money(mine)}</b></p>`;
 }
 // progress towards a savings goal; with a target month — how much to put aside each month
 function goalLine(a, bal) {
@@ -1380,6 +1391,7 @@ function openAdd(id) {
       expr2: '0', manual2: false, focus: 'from'};
   }
   if (!A.to) A.to = (S.accounts.find(a => a.id !== A.acc && (A.type === 'debt' ? a.kind === 'debt' : a.kind !== 'debt')) || {}).id || '';
+  A.subOpen = A.sub ? A.cat : '';   // an operation with a subcategory opens on its subcategory row
   document.body.style.overflow = 'hidden';
   $('#add').hidden = false;
   renderAdd();
@@ -1416,10 +1428,12 @@ const catBtn = (act, id, ic, color, name, on) => `<button data-act="${act}" data
 function addCatsHtml() {
   if (A.type !== 'expense' && A.type !== 'income') return '';
   const cats = S.cats.filter(c => c.type === A.type);
-  let h = `<div class="catpick"><div class="strip">${catBtn('catSearch', '', '🔍', '#64748b', 'Поиск', false)}${catBtn('pickCat', '', '❔', '#64748b', 'Без категории', !A.cat)}${cats.map(c => catBtn('pickCat', c.id, c.icon, c.color, c.name, A.cat === c.id)).join('')}</div>`;
-  const c = CAT.get(A.cat);
-  if (c && c.subs.length) h += `<div class="strip subs">${catBtn('pickSub', '', c.icon, c.color, 'Вся категория', !A.sub)}${c.subs.map(s => catBtn('pickSub', s.id, s.icon, s.color, s.name, A.sub === s.id)).join('')}</div>`;
-  return h + `</div>`;
+  // one row only, so the screen height never changes: a category with subcategories swaps the row for its subcategories
+  const c = CAT.get(A.subOpen);
+  if (c && c.subs.length) return `<div class="catpick"><div class="strip">${catBtn('subBack', '', '‹', '#64748b', 'Категории', false)}
+    ${catBtn('pickSub', '', c.icon, c.color, c.name + ' (вся)', A.cat === c.id && !A.sub)}${c.subs.map(s => catBtn('pickSub', s.id, s.icon, s.color, s.name, A.sub === s.id)).join('')}</div></div>`;
+  return `<div class="catpick"><div class="strip">${catBtn('catSearch', '', '🔍', '#64748b', 'Поиск', false)}${catBtn('pickCat', '', '❔', '#64748b', 'Без категории', !A.cat)}${cats.map(c =>
+    catBtn('pickCat', c.id, c.icon, c.color, c.name + (A.cat === c.id && A.sub ? ' › ' + (SUB.get(A.sub) || {}).name : ''), A.cat === c.id)).join('')}</div></div>`;
 }
 function scrollStripToSelected() {
   for (const b of document.querySelectorAll('#addCats .strip button.on')) b.scrollIntoView({block: 'nearest', inline: 'center'});
@@ -1461,9 +1475,7 @@ function renderAdd() {
     : `<div class="amount" id="addAmt">${addAmountHtml()}</div>
       <div class="add-row">${accChipA('acc', A.acc)}${dateChip}</div>`}
     <div id="addCats">${addCatsHtml()}</div>
-    ${A.type === 'expense' || A.type === 'income' ? `<div class="row" style="margin:0 0 8px 4px">
-      ${A.type === 'expense' ? `<label class="check" style="margin:0"><input type="checkbox" data-addf="refund" ${A.refund ? 'checked' : ''}> Возврат</label>` : '<span></span>'}
-      <button class="btn small ghost" data-act="split">✂ Разделить на категории</button></div>` : ''}
+    ${A.type === 'expense' || A.type === 'income' ? `<button class="btn small ghost wide" style="margin:0 0 8px" data-act="split">✂ Разделить на категории</button>` : ''}
     <input class="note" data-addf="note" value="${esc(A.note)}" placeholder="Заметка">
     <div class="keys">${['1', '2', '3', '+', '4', '5', '6', '−', '7', '8', '9', '×', ',', '0', '⌫', '÷'].map(k =>
       `<button class="${/[+−×÷]/.test(k) ? 'op' : ''}" data-act="key" data-k="${k}">${k}</button>`).join('')}</div>
@@ -2116,7 +2128,7 @@ const ACT = {
   closeAdd: () => closeAdd(),
   addType: el => {
     const v = el.dataset.v; if (A.type === v) return;
-    A.split = null;
+    A.split = null; A.subOpen = '';
     const wasCat = A.type === 'expense' || A.type === 'income';
     A.type = v;
     if (!(wasCat && (v === 'expense' || v === 'income') && CAT.get(A.cat) && CAT.get(A.cat).type === v)) { A.cat = ''; A.sub = ''; }
@@ -2150,8 +2162,16 @@ const ACT = {
     if (!(r > 0)) { toast('Введите курс, например 3,25'); return; }
     S.usdRate = r; save(); closeSheet(); render(); toast('Курс сохранён');
   },
-  pickCat: el => { A.cat = el.dataset.id; A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
-  pickSub: el => { if (el.dataset.id) { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; } else A.sub = ''; $('#addCats').innerHTML = addCatsHtml(); },
+  pickCat: el => {
+    A.cat = el.dataset.id; A.sub = '';
+    const c = CAT.get(A.cat); A.subOpen = c && c.subs.length ? c.id : '';
+    $('#addCats').innerHTML = addCatsHtml(); $('#addCats .strip').scrollLeft = 0;
+  },
+  pickSub: el => {
+    if (el.dataset.id) { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; } else { A.sub = ''; A.cat = A.subOpen; }
+    $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected();
+  },
+  subBack: () => { A.subOpen = ''; $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
   split: () => sheetSplit(),
   splitAdd: () => { A.split.push({key: '', amt: ''}); sheetSplit(); sheetDirty = true; },
   splitDel: el => { A.split.splice(+el.dataset.i, 1); sheetSplit(); sheetDirty = true; },
@@ -2161,8 +2181,8 @@ const ACT = {
       <div id="catGrid">${catGridHtml('')}</div>`);
     $('[data-catsearch]').focus();
   },
-  pickCatS: el => { A.cat = el.dataset.id; A.sub = ''; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
-  pickSubS: el => { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
+  pickCatS: el => { A.cat = el.dataset.id; A.sub = ''; A.subOpen = ''; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
+  pickSubS: el => { A.sub = el.dataset.id; A.cat = SUBCAT.get(A.sub).id; A.subOpen = A.cat; closeSheet(); $('#addCats').innerHTML = addCatsHtml(); scrollStripToSelected(); },
   key: el => pressKey(el.dataset.k),
   saveTx: () => saveTx(),
   delTx: () => { const id = A.id; closeAdd(); deleteTx(id); },
@@ -2199,7 +2219,7 @@ let swr = null, swrOpen = null, swrSuppress = false;
 const SW_BTN = 92;
 function closeSwipe(row) {
   if (!row) return;
-  row.querySelector('.tx').style.transform = ''; row.classList.remove('open-l', 'open-r');
+  row.querySelector('.tx').style.transform = ''; row.classList.remove('open-l', 'open-r', 'swiping');
   if (swrOpen === row) swrOpen = null;
 }
 document.addEventListener('touchstart', e => {
@@ -2216,7 +2236,7 @@ document.addEventListener('touchmove', e => {
     if (Math.abs(mx) < 8 && Math.abs(my) < 8) return;
     swr.lock = Math.abs(mx) > Math.abs(my) ? 'x' : 'y';   // scrolling the list wins on vertical moves
     if (swr.lock === 'y') { swr = null; return; }
-    swr.f.style.transition = 'none';
+    swr.f.style.transition = 'none'; swr.row.classList.add('swiping');
   }
   e.preventDefault();
   swr.dx = swr.base + mx;
@@ -2228,6 +2248,7 @@ document.addEventListener('touchmove', e => {
 const swipeRowEnd = e => {
   if (!swr) return;
   const s = swr; swr = null;
+  if (s.lock !== 'x') return;   // a plain tap: let the click open the operation
   swrSuppress = true; setTimeout(() => { swrSuppress = false; }, 350);
   s.f.style.transition = '';
   s.row.querySelector('.del').style.width = ''; s.row.querySelector('.rep').style.width = '';
