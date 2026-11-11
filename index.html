@@ -127,6 +127,11 @@ main{max-width:640px;margin:0 auto}
 .chipst{font-size:12px;font-weight:600;padding:3px 8px;border-radius:99px;white-space:nowrap}
 .chipst.ok{background:var(--ok-soft);color:var(--ok)}.chipst.warn{background:var(--warn-soft);color:var(--warn)}
 .chipst.bad{background:var(--bad-soft);color:var(--bad)}.chipst.muted{background:var(--track);color:var(--muted)}
+/* "align the plan to what's already spent" button under a category card */
+.catgrp{margin:0 0 8px}.catgrp .cat{margin-bottom:0}
+.fixbtn{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;padding:10px 14px;margin:6px 0 0;border-radius:12px;background:var(--bad-soft);color:var(--bad);font-size:13px;font-weight:600}
+.fixbtn.warn{background:var(--warn-soft);color:var(--warn)}
+.fixbtn:active{opacity:.75}
 .alert{display:block;width:100%;background:var(--warn-soft);color:var(--warn);border-radius:16px;padding:12px 14px;margin:0 0 12px;font-weight:550}
 .banner{background:var(--accent-soft);border-radius:16px;padding:12px 14px;margin:0 0 12px;font-size:14px}
 .banner .row{margin-top:8px;justify-content:flex-start}
@@ -370,7 +375,7 @@ ol.steps{padding-left:20px;margin:6px 0 0}ol.steps li{margin:4px 0}
 <script>
 'use strict';
 const KEY = 'budget-app-v1';
-const APP_VERSION = 21;   // keep in step with VERSION in sw.js
+const APP_VERSION = 22;   // keep in step with VERSION in sw.js
 const MONTHS = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const MONTHS_GEN = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 const MON_SHORT = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
@@ -642,6 +647,38 @@ function status(limit, spent) {
   if (Math.abs(limit - spent) < 0.005) return ['Исчерпан', 'warn'];
   if (spent / limit >= 0.85) return ['Почти всё', 'warn'];
   return ['В норме', 'ok'];
+}
+// where the plan is below what's already spent: one row per limit (the category itself or a subcategory).
+// d is how much the limit is missing; rows are grouped per category, in BYN like the limits themselves
+function planGaps(r = budgetCalc(cur)) {
+  const out = [];
+  for (const c of S.cats) {
+    if (c.type !== 'expense') continue;
+    const rows = [{lid: c.id, key: c.id + ':own', name: c.name, icon: c.icon}]
+      .concat(c.subs.map(s => ({lid: s.id, key: s.id, name: s.name, icon: s.icon})))
+      .map(x => Object.assign(x, {sp: r.sub.get(x.key) || 0, lim: num(r.L[x.lid])}))
+      .map(x => Object.assign(x, {d: x.sp - x.lim}))
+      .filter(x => x.d > 0.005 && x.sp > 0.005);
+    if (rows.length) out.push({cid: c.id, c, inc: catLimit(r.L, c), sp: r.cat.get(c.id) || 0, rows, d: rows.reduce((s, x) => s + x.d, 0)});
+  }
+  return out;
+}
+// set the limits to the spent amount: one category, or every category when cid is empty. Undoable.
+function alignPlan(cid) {
+  const gaps = planGaps().filter(g => !cid || g.cid === cid);
+  if (!gaps.length) { toast('Нечего выравнивать'); return; }
+  const had = !!S.budgets[cur], before = had ? Object.assign({}, S.budgets[cur].limits) : null;
+  const b = bmut(cur);
+  let total = 0, n = 0;
+  for (const g of gaps) for (const x of g.rows) { b.limits[x.lid] = round2(x.sp); total += x.d; n++; }
+  save(); refreshAfterChange();
+  const one = gaps.length === 1 && n === 1 ? gaps[0].rows[0] : null;
+  undoToast(one ? `Лимит «${one.name}»: ${nf.format(round2(one.lim))} → ${nf.format(round2(one.sp))}`
+    : `План выровнен: ${gaps.length} ${plural(gaps.length, 'категория', 'категории', 'категорий')}, +${nf.format(round2(total))}`,
+    () => {
+      if (had) S.budgets[cur].limits = before; else delete S.budgets[cur];
+      save(); refreshAfterChange();
+    });
 }
 // remind weekly unless a file copy or a cloud copy was made in the last 7 days
 function needBackup() { return S.tx.length > 0 && Date.now() - Math.max(S.lastBackup || 0, cloudCfg().last || 0) > 7 * 864e5; }
@@ -1108,6 +1145,12 @@ function vOverview() {
     <div class="card stat"><div class="lbl">Свободные деньги</div><div class="val num ${r.free < 0 ? 'neg' : ''}">${money(r.free)}</div><div class="sub">доход − план</div></div>
     <div class="card stat"><div class="lbl">Осталось по плану</div><div class="val num ${r.plan - r.spent < 0 ? 'neg' : ''}">${money(r.plan - r.spent)}</div><div class="sub">план − потрачено</div></div>
   </div>`;
+  // limits that are already below the spending: fix them in one tap, the plan then tells the truth
+  const gaps = planGaps(r), gapBy = new Map(gaps.map(g => [g.cid, g]));
+  if (gaps.length) {
+    const total = gaps.reduce((s, g) => s + g.d, 0);
+    h += `<button class="alert" data-act="fixAll">⚠ Выровнять по факту: ${gaps.length} ${plural(gaps.length, 'категория', 'категории', 'категорий')} · +${money(total)}</button>`;
+  }
   if (r.uncList.length) h += `<button class="alert" data-act="showUnc">⚠ Без категории: ${r.uncList.length} на ${money(r.unc)} — разобрать</button>`;
   if (r.exList.length) h += `<button class="cat" data-act="showEx"><div class="row"><span class="muted">🚫 Не учтено в бюджете</span>
     <span class="small">${r.exList.length} ${plural(r.exList.length, 'операция', 'операции', 'операций')} ›</span></div></button>`;
@@ -1118,9 +1161,11 @@ function vOverview() {
     const lim = catLimit(r.L, c), sp = r.cat.get(c.id) || 0;
     if (lim <= 0 && Math.abs(sp) < 0.005) continue;
     const [st, sc] = status(lim, sp), w = lim > 0 ? Math.min(100, sp / lim * 100) : (sp > 0 ? 100 : 0);
-    h += `<button class="cat" data-act="budCat" data-id="${c.id}"><div class="r1">${icon(c.icon, c.color, 'sm')}<b>${esc(c.name)}</b><span class="chipst ${sc}">${st}</span></div>
+    const g = gapBy.get(c.id);
+    h += `<div class="catgrp"><button class="cat" data-act="budCat" data-id="${c.id}"><div class="r1">${icon(c.icon, c.color, 'sm')}<b>${esc(c.name)}</b><span class="chipst ${sc}">${st}</span></div>
       <div class="bar"><i class="${sc}" style="width:${Math.max(0, w)}%"></i></div>
-      <div class="r2 num"><span>${money(sp)} из ${money(lim)}</span><span class="${lim - sp < -0.005 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div></button>`;
+      <div class="r2 num"><span>${money(sp)} из ${money(lim)}</span><span class="${lim - sp < -0.005 ? 'neg' : ''}">осталось ${money(lim - sp)}</span></div></button>${
+      g ? `<button class="fixbtn ${g.inc > 0.005 ? '' : 'warn'}" data-act="fixCat" data-id="${g.cid}">${g.inc > 0.005 ? 'Выровнять' : 'В план'} +${nf.format(round2(g.d))}</button>` : ''}</div>`;
   }
   const hidden = S.cats.filter(c => c.type === 'expense' && catLimit(r.L, c) <= 0 && !(r.cat.get(c.id)));
   if (hidden.length) h += `<details class="nolimit"><summary>Категории без лимита (${hidden.length})</summary>
@@ -2115,6 +2160,8 @@ const ACT = {
   // budget
   budMode: el => { budMode = el.dataset.v; render(); },
   budCat: el => sheetBudCat(el.dataset.id),
+  fixCat: el => alignPlan(el.dataset.id),
+  fixAll: () => alignPlan(''),
   goPlan: () => { closeSheet(); budMode = 'plan'; render(); },
   editIncome: () => { budMode = 'plan'; render(); setTimeout(() => $('[data-income]')?.focus(), 50); },
   showEx: () => {
